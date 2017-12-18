@@ -1,0 +1,71 @@
+---
+- hosts: hdprepo
+  name: create repo for hdp deployment
+  tasks:
+    - name: "install prerequisite libselinx"
+      become: yes
+      become_method: sudo
+      yum:
+        name: libselinux-python
+        state: present
+
+    - name: add HDP 2.6.3.x repo
+      become: yes
+      become_method: sudo
+      yum_repository:
+        name: HDP2.6
+        description: Hortonworks HDP 2.6
+#       baseurl: URL	http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/2.6.3.0
+        baseurl: "{{ item }}"
+        gpgcheck: no
+      with_items:
+        - "http://public-repo-1.hortonworks.com/HDP/centos6/2.x/updates/2.6.3.0"
+        - "http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.21/repos/centos6"
+
+    - name: copy and install oracle jdk and jce policy
+      become: yes
+      become_method: sudo
+      copy:
+        src: /Users/lel/cfpb_dev/HortonworksHDP_ri/files/jdk-8u151-linux-x64.rpm
+        dest: /tmp
+        owner: root
+        group: root
+        mode: 0644
+        #remote_src: yes
+        #directory_mode: no
+
+    - name: copy and install oracle jdk and jce policy
+      become: yes
+      become_method: sudo
+      copy:
+        src: /Users/lel/cfpb_dev/HortonworksHDP_ri/files/jce_policy-8.zip
+        dest: /tmp
+        owner: root
+        group: root
+        mode: 0644
+        #remote_src: yes
+        #directory_mode: yes
+
+    - name: install oracle jdk
+      become: yes
+      become_method: sudo
+      yum:
+        name: /tmp/jdk-8u151-linux-x64.rpm
+        state: present
+
+    - name: deploy jce policy
+      become: yes
+      become_method: sudo
+      unarchive:
+        src: /tmp/jce_policy-8.zip
+        dest: /tmp/test/ 
+
+    - name: install required packages
+      become: yes
+      become_method: sudo
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - createrepo
+        - yum-utils 
