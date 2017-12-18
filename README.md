@@ -1,2 +1,2 @@
-# HortonworksHDP_ri
-HortonworksHDP Reference Implementation
+### HortonworksHDP_ri
+*HortonworksHDP Reference Implementation*

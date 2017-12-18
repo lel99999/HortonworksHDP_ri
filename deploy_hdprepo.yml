@@ -46,6 +46,18 @@
         #remote_src: yes
         #directory_mode: yes
 
+    - name: copy and setup hdp repo
+      become: yes
+      become_method: sudo
+      copy:
+        src: /Users/lel/cfpb_dev/HortonworksHDP_ri/files/HDP2.6.3.0-centos6.rpm.tar.gz
+        dest: /tmp
+        owner: root
+        group: root
+        mode: 0644
+        #remote_src: yes
+        #directory_mode: yes
+
     - name: install oracle jdk
       become: yes
       become_method: sudo
@@ -69,3 +81,7 @@
       with_items:
         - createrepo
         - yum-utils 
+
+- hosts: hdp
+  name: install hdp
+  

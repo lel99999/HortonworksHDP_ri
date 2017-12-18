@@ -1,0 +1,6 @@
+---
+- name: download oracle jdk 8
+  get_url:
+    url: https://
+    dest: /tmp/devHDP
+    mode: 0755
