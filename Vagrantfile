@@ -15,19 +15,19 @@ Vagrant.configure("2") do |config|
     slv01.vm.box = "bento/centos-6.7"
     slv01.vm.hostname = "slv01"
     #slv01.vm.box = "wharton-wcit/centos6py36"
-    slv01.vm.network "private_network", ip: "192.168.64.165"
+    slv01.vm.network "private_network", ip: "192.168.60.165"
   end
   config.vm.define "slv02" do |slv02|
     slv02.vm.box = "bento/centos-6.7"
     slv02.vm.hostname = "slv02"
     #slv02.vm.box = "wharton-wcit/centos6py36"
-    slv02.vm.network "private_network", ip: "192.168.65.166"
+    slv02.vm.network "private_network", ip: "192.168.60.166"
   end
   config.vm.define "slv03" do |slv03|
     slv03.vm.box = "bento/centos-6.7"
     slv03.vm.hostname = "slv03"
     #slv03.vm.box = "wharton-wcit/centos6py36"
-    slv03.vm.network "private_network", ip: "192.168.66.167"
+    slv03.vm.network "private_network", ip: "192.168.60.167"
   end
   #config.vm.provision "ansible" do |ansible|
   #  ansible.playbook = "hdp_singlesetup.yml"
