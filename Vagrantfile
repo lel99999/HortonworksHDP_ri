@@ -1,9 +1,9 @@
 Vagrant.configure("2") do |config|
-  config.vm.define "hdptest" do |hdprepo|
-    hdprepo.vm.box = "bento/centos-6.7"
-    hdprepo.vm.hostname = "hdptest"
-    #hdprepo.vm.box = "wharton-wcit/centos6py36"
-    hdprepo.vm.network "private_network", ip: "192.168.60.162"
+  config.vm.define "hdptest" do |hdptest|
+    hdptest.vm.box = "bento/centos-6.7"
+    hdptest.vm.hostname = "hdptest"
+    #hdptest.vm.box = "wharton-wcit/centos6py36"
+    hdptest.vm.network "private_network", ip: "192.168.60.162"
   end
   config.vm.define "hdprepo" do |hdprepo|
     hdprepo.vm.box = "bento/centos-6.7"

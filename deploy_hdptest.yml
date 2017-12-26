@@ -1,0 +1,8 @@
+---
+- hosts: hdptest
+  name: experimental deployment
+  tasks:
+    - name: oracle java 8
+      static: no
+      include_role:
+        name: oracle_java8
