@@ -4,14 +4,20 @@
 #java_name: /usr/java/jdk1.8.0_151
 
 - name: check if oracle java 8 exists
-  stat: path=/usr/java/jdk1.8.0_151
+  stat: path=/usr/java/jdk1.8.0_151/bin/
   register: jdk8
-  when: jdk8.stat.isdir is defined and jdk8.stat.isdir
+  #when: jdk8.stat.isdir is defined #and jdk8.stat.isdir
+
+- name: print status of /usr/java/jdk1.8.0_151 directory creation
+  debug: msg="{{ jdk8.stat }}"
+  #debug: msg="{{ jdk8.stat.isdir }}"
 
 - name: download oracle jdk 8
+  become: yes
+  become_method: sudo
   command: "wget -q -O {{java_archive}} --no-check-certificate --no-cookies --header 'Cookie: oraclelicense=accept-securebackup-cookie' {{download_url}} creates={{java_archive}}"
   #when: not jdk8.stat.exists
-  when: not jdk8.stat.isdir is defined
+  #when: not jdk8.stat.isdir is defined
   #shell:  wget --no-cookies --no-check-certificate --header 'Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie http://download.oracle.com/otn-pub/java/jdk/8u151-b12/e758a0de34e24606bca991d704f6dcbf/jdk-8u151-linux-x64.tar.gz' -O /tmp/jdk-8u151-linux-x64.tar.gz
   #shell:  wget 'http://download.oracle.com/otn-pub/java/jdk/8u151-b12/e758a0de34e24606bca991d704f6dcbf/jdk-8u151-linux-x64.tar.gz' -O /tmp/jdk-8u151-linux-x64.tar.gz
   # args:
@@ -28,13 +34,24 @@
   #    Cookie: 'gpw_e24=http%3A%2F%2Fwww.oracle.com%2F,oraclelicense=accept-securebackup-cookie'
   #  others: --no-cookies --no-check-certificate
   # mode: 0755
-- name: unpack jdk
+- name: make java dir
   become: yes
   become_method: sudo
-  command:  "tar -xf {{java_archive}} -C '/usr/java'"
-#  args:
-#    creates:  /usr/java/jdk1.8.0_151
-  when: not jdk8.stat.isdir is defined
+  file: state=directory path=/usr/java
+  when: not jdk8.stat.exists
+
+- name: unpack jdk 8
+  become: yes
+  become_method: sudo
+  command:  'tar xf {{java_archive}}'
+  #command:  'tar xf {{java_archive}} -C "/opt" creates={{java_name}}'
+  #args:
+  #  creates:  /usr/java
+  #when: not jdk8.stat.isdir is defined
+- name: mv jdk8 to correct location
+  become: yes
+  become_method: sudo
+  command: cp -rlf /opt/jdk1.8.0_151 /usr/java/
 
 - name: change ownership
   become: yes
@@ -48,9 +65,6 @@
   command: 'alternatives --install "/usr/bin/java" "java" "{{java_name}}/bin/java" 50'
   when: jdk8.stat.isdir is defined
 
-- name: cleanup
-  file: state=absent path="{{java_archive}}"
-
 - name: install libselinux-python dependency
   become: yes
   become_method: sudo
@@ -63,41 +77,69 @@
     - unzip
 
 - name: jce 8 policy status
-  stat: path=/tmp/UnlimitedJCEPolicyJDK8
+  stat: path=/opt/UnlimitedJCEPolicyJDK8
   register: jce8
-  when: jce8.stat.isdir is defined and jce8.stat.isdir
+  #when: jce8.stat.isdir is defined and jce8.stat.isdir
 
 - name: copy jce_policy 8
+  become: yes
+  become_method: sudo
   copy:
     src: files/jce_policy-8.zip
-    dest: /tmp
+    dest: /opt
   when: not jce8.stat.isdir is defined
 
 - name: unpack jce_policy 8
   become: yes
   become_method: sudo
   unarchive: 
-   src: /tmp/jce_policy-8.zip
-   dest: /tmp
+   src: /opt/jce_policy-8.zip
+   dest: /opt
    remote_src: yes
   when: not jce8.stat.isdir is defined
   
 - name: jce 8 policy status
   stat: path=/usr/java/jdk1.8.0_151/jre/lib/security/policy/unlimited/bkp
   register: jce8_pol
-  when: jce8.stat.isdir is defined and jce8.stat.isdir
+  #when: jce8.stat.isdir is defined and jce8.stat.isdir
 
 - name: bkp old java 8 policy files
   become: yes
   become_method: sudo
-  command: >
-    mkdir /usr/java/jdk1.8.0_151/jre/lib/security/policy/unlimited/bkp;
-    mv /usr/java/jdk1.8.0_151/jre/lib/security/policy/unlimited/*.jar /usr/java/jdk1.8.0_151/jre/lib/security/policy/unlimited/bkp
+  file: state=directory path=/usr/java/jdk1.8.0_151/jre/lib/security/policy/unlimited/bkp
+
+- name: mv old java 8 policy files
+  become: yes
+  become_method: sudo
+  command:  cp -fl /usr/java/jdk1.8.0_151/jre/lib/security/policy/unlimited/{{ item }} usr/java/jdk1.8.0_151/jre/lib/security/policy/unlimited/bkp
+  with_items:
+    - "local_policy.jar"
+    - "US_export_policy.jar" 
+#  copy:
+#    src: usr/java/jdk1.8.0_151/jre/lib/security/policy/unlimited
+#    dest: usr/java/jdk1.8.0_151/jre/lib/security/policy/unlimited/bkp
+#    remote_src: yes
+#    directory_mode: yes
+  #command: >
+  #  mv /usr/java/jdk1.8.0_151/jre/lib/security/policy/unlimited/*.jar /usr/java/jdk1.8.0_151/jre/lib/security/policy/unlimited/bkp
   when: not jce8_pol.stat.isdir is defined
 
 - name: replace default java 8 policy files
-  copy:
-    src: /tmp/UnlimitedJCEPolicyJDK8
-    dest: /usr/java/jdk1.8.0_151/jre/lib/security/policy/unlimited
-    #remote_src: yes
-    directory_mode: yes
+  become: yes
+  become_method: sudo
+  command:  cp /opt/UnlimitedJCEPolicyJDK8/{{ item }} /usr/java/jdk1.8.0_151/jre/lib/security/policy/unlimited/
+  with_items:
+    - "local_policy.jar"
+    - "US_export_policy.jar" 
+  #copy:
+  #  src: /opt/UnlimitedJCEPolicyJDK8/
+  #  dest: /usr/java/jdk1.8.0_151/jre/lib/security/policy/unlimited
+  #  remote_src: yes
+    #directory_mode: yes
+  when: jce8.stat.isdir is defined
+
+#- name: cleanup
+#  become: yes
+#  become_method: sudo
+#  file: state=absent path="{{java_archive}}"
+
