@@ -6,7 +6,64 @@
     java_name: /usr/java/jdk1.8.0_151
   name: experimental deployment
   tasks:
-    - name: install oracle java 8
+    - name: install oracle java 8 and set JCE8 crypto policy to unlimited
       static: no
       include_role:
         name: oracle_java8
+
+    - name: add HDP 2.6.3.x repo
+      become: yes
+      become_method: sudo
+      yum_repository:
+        name: HDP2.6
+        description: Hortonworks HDP 2.6
+#       baseurl: URL    http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/2.6.3.0
+#        baseurl: "{{ item }}"
+        baseurl: "http://public-repo-1.hortonworks.com/HDP/centos6/2.x/updates/2.6.3.0"
+        gpgcheck: no
+        enabled: yes
+#      with_items:
+#        - "http://public-repo-1.hortonworks.com/HDP/centos6/2.x/updates/2.6.3.0"
+#        - "http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.21/repos/centos6"
+    - name: add HDP Utils repo
+      become: yes
+      become_method: sudo
+      yum_repository:
+        name: HDP2.6 Utils
+        description: Hortonworks HDP 2.6 Utils
+        baseurl: "http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.21/repos/centos6"
+        gpgcheck: no
+        enabled: yes
+
+    - name: install HDP base packages
+      become: yes
+      become_method: sudo
+      yum:
+        name: "{{item}}"
+      with_items:
+        - hadoop
+        - hadoop-hdfs
+        - hadoop-libhdfs
+        - hadoop-yarn
+        - hadoop-mapreduce
+        - hadoop-client
+        - openssl
+     # install compression libraries
+        - snappy
+        - snappy-devel
+        - lzo
+        - lzo-devel
+        - hadooplzo
+        - hadooplzo-native
+
+    - name: download HDP helper files
+      command: wget -O /opt http://public-repo-1.hortonworks.com/HDP/tools/2.6.0.3/hdp_manual_install_rpm_helper_files-2.6.0.3.8.tar.gz
+
+    - name: extract HDP helper files
+      command: tar xf hdp_manual_install_rpm_helper_files-2.6.0.3.8.tar.gz
+      args:
+        chdir: /opt
+
+    - name: create directories
+      command: 
+
