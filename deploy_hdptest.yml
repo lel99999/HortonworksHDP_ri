@@ -4,6 +4,13 @@
     download_url: http://download.oracle.com/otn-pub/java/jdk/8u151-b12/e758a0de34e24606bca991d704f6dcbf/jdk-8u151-linux-x64.tar.gz
     java_archive: /opt/jdk-8u151-linux-x64.tar.gz
     java_name: /usr/java/jdk1.8.0_151
+    namenode_dirs: /grid/hadoop/hdfs/nn
+    secondary_namenode_dirs: /grid/hadoop/hdfs/snn
+    data_dirs: /grid/hadoop/hdfs/dn
+    yarn_local_dirs: /grid/hadoop/yarn/local 
+    yarn_local_log_dirs: /grid/hadoop/yarn/logs
+    zookeeper_data_dirs: /grid/hadoop/zookeeper/data
+    
   name: experimental deployment
   tasks:
     - name: install oracle java 8 and set JCE8 crypto policy to unlimited
@@ -57,13 +64,246 @@
         - hadooplzo-native
 
     - name: download HDP helper files
-      command: wget -O /opt http://public-repo-1.hortonworks.com/HDP/tools/2.6.0.3/hdp_manual_install_rpm_helper_files-2.6.0.3.8.tar.gz
+      become: yes
+      become_method: sudo
+      #command: wget -O /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8.tar.gz http://public-repo-1.hortonworks.com/HDP/tools/2.6.0.3/hdp_manual_install_rpm_helper_files-2.6.0.3.8.tar.gz
+      get_url:
+        url: http://public-repo-1.hortonworks.com/HDP/tools/2.6.0.3/hdp_manual_install_rpm_helper_files-2.6.0.3.8.tar.gz
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8.tar.gz
+        mode: 0755
 
     - name: extract HDP helper files
+      become: yes
+      become_method: sudo
       command: tar xf hdp_manual_install_rpm_helper_files-2.6.0.3.8.tar.gz
       args:
         chdir: /opt
 
-    - name: create directories
-      command: 
+    - name: NAMENODE variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+        regexp: 'TODO-LIST-OF-NAMENODE-DIRS'
+        line: 'DFS_NAME_DIR={{ namenode_dirs }}'
+        state: present
+
+    - name: SECONDARY NAMENODE variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+        regexp: 'TODO-LIST-OF-SECONDARY-NAMENODE-DIRS'
+        line: 'FS_CHECKPOINT_DIR={{ secondary_namenode_dirs }}'
+        state: present
+
+    - name: DATANODE variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+        regexp: 'TODO-LIST-OF-DATA-DIRS'
+        line: 'DFS_DATA_DIR={{ data_dirs }}'
+        state: present
+
+    - name: YARN LOCAL variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+        regexp: 'TODO-LIST-OF-YARN-LOCAL-DIRS'
+        line: 'YARN_LOCAL_DIR={{ yarn_local_dirs }}'
+        state: present
+
+    - name: YARN LOG variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+        regexp: 'TODO-LIST-OF-YARN-LOCAL-LOG-DIRS'
+        line: 'YARN_LOCAL_LOG_DIR={{ yarn_local_log_dirs }}'
+        state: present
+
+    - name: ZOOKEEPER variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+        regexp: 'TODO-ZOOKEEPER-DATA-DIR'
+        line: 'ZOOKEEPER_DATA_DIR={{ zookeeper_data_dirs }}'
+        state: present
+
+    - name: set directories env variables
+      become: yes
+      become_method: sudo
+      command: source /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+
+    - name: set user variables
+      become: yes
+      become_method: sudo
+      command: source /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/usersAndGroups.sh
+
+#- hosts: namenode
+#  name: namenode only
+#  tasks:
+
+    - name: create namenode directories
+      become: yes
+      become_method: sudo
+      command: mkdir -p $DFS_NAME_DIR
+  
+    - name: change ownership namenode directories
+      become: yes
+      become_method: sudo
+      command: chown -R $HDFS_USER:$HADOOP_GROUP $DFS_NAME_DIR
+
+    - name: change permissions namenode directories
+      become: yes
+      become_method: sudo
+      command: chmod -R 755 $DFS_NAME_DIR
+ 
+    - name: create secondary namenode directories
+      become: yes
+      become_method: sudo
+      command: mkdir -p $FS_CHECKPOINT_DIR
+  
+    - name: change ownership secondary namenode directories
+      become: yes
+      become_method: sudo
+      command: chown -R $HDFS_USER:$HADOOP_GROUP $FS_CHECKPOINT_DIR
+    
+    - name: change permissions secondary namenode directories
+      become: yes
+      become_method: sudo
+      command: chmod -R 755 $FS_CHECKPOINT_DIR
+ 
+    - name: create datanode directories
+      become: yes
+      become_method: sudo
+      command: mkdir -p $DFS_DATA_DIR
+   
+    - name: change ownership datanode directories
+      become: yes
+      become_method: sudo
+      command: chown -R $HDFS_USER:$HADOOP_GROUP $DFS_DATA_DIR
+
+    - name: change permissions datanode directories
+      become: yes
+      become_method: sudo
+      command: chmod -R 750 $DFS_DATA_DIR
+
+#- hosts: ResourceManager and all Datanodes
+    - name: create YARN directories
+      become: yes
+      become_method: sudo
+      command: mkdir -p $YARN_LOCAL_DIR
+
+    - name: change ownernership of YARN directories
+      become: yes
+      become_method: sudo
+      command: chown -R $YARN_USER:$HADOOP_GROUP $YARN_LOCAL_DIR
+
+    - name: change permissions of YARN directories
+      become: yes
+      become_method: sudo
+      command: chmod -R 755 $YARN_LOCAL_DIR
+
+# CREATE LOG and PID Directories
+    - name: create log directories
+      become: yes
+      become_method: sudo
+      command: mkdir -p $HDFS_LOG_DIR
+
+    - name: change ownership of LOG directories
+      become: yes
+      become_method: sudo
+      command: chown -R $HDFS_USER:$HADOOP_GROUP $HDFS_LOG_DIR
+
+    - name: change permissions of LOG directories
+      become: yes
+      become_method: sudo
+      command: chmod -R 755 $HDFS_LOG_DIR
+
+    - name: create YARN Logs Directories
+      become: yes
+      become_method: sudo
+      command: mkdir -p $YARN_LOG_DIR
+
+    - name: change ownership YARN Logs Directories
+      become: yes
+      become_method: sudo
+      command: chown -R $YARN_USER:$HADOOP_GROUP $YARN_LOG_DIR
+
+    - name: change permissions YARN Logs Directories
+      become: yes
+      become_method: sudo
+      command: chmod -R 755 $YARN_LOG_DIR
+
+# All Nodes
+# HDFS Process
+    - name: create HDFS Process Directories 
+      become: yes
+      become_method: sudo
+      command: mkdir -p $HDFS_PID_DIR
+
+    - name: change ownership of HDFS Process Directories
+      become: yes
+      become_method: sudo
+      command: chown -R $HDFS_USER:$HDFS_GROUP $HDFS_PID_DIR
+
+    - name: change permissions of HDFS Process Directories
+      become: yes
+      become_method: sudo
+      command: chmod -R 755 $HDFS_PID_DIR
+
+# YARN Process ID
+
+    - name: create YARN Process Directories 
+      become: yes
+      become_method: sudo
+      command: mkdir -p $YARN_PID_DIR
+
+    - name: change ownership of YARN Process Directories
+      become: yes
+      become_method: sudo
+      command: chown -R $YARN_USER:$HDFS_GROUP $YARN_PID_DIR
+
+    - name: change permissions of YARN Process Directories
+      become: yes
+      become_method: sudo
+      command: chmod -R 755 $YARN_PID_DIR
+
+# JobHistory Log
+
+    - name: create JobHistory Server LOGS Directories 
+      become: yes
+      become_method: sudo
+      command: mkdir -p $MAPRED_LOG_DIR
+
+    - name: change ownership of JobHistory Server LOGS Directories
+      become: yes
+      become_method: sudo
+      command: chown -R $MAPRED_USER:$HDFS_GROUP $MAPRED_LOG_DIR
+
+    - name: change permissions of JobHistory Server LOGS Directories
+      become: yes
+      become_method: sudo
+      command: chmod -R 755 $MAPRED_LOG_DIR
+
+# JobHistory Server Process ID
+
+    - name: create JobHistory Server Process ID Directories 
+      become: yes
+      become_method: sudo
+      command: mkdir -p $MAPRED_PID_DIR
+
+    - name: change ownership of JobHistory Server Process ID Directories
+      become: yes
+      become_method: sudo
+      command: chown -R $MAPRED_USER:$HDFS_GROUP $MAPRED_PID_DIR
+
+    - name: change permissions of JobHistory Server Process ID Directories
+      become: yes
+      become_method: sudo
+      command: chmod -R 755 $MAPRED_PID_DIR
 
