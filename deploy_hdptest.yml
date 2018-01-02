@@ -79,6 +79,11 @@
       args:
         chdir: /opt
 
+    - name: chamge permissions on helper files
+      become: yes
+      become_method: sudo
+      command: chmod -R 755 /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts
+
     - name: NAMENODE variable injection
       become: yes
       become_method: sudo
@@ -133,15 +138,30 @@
         line: 'ZOOKEEPER_DATA_DIR={{ zookeeper_data_dirs }}'
         state: present
 
+    - name: change ownership of HDP Helper directory
+      become: yes
+      become_method: sudo
+      command: chown -R root:root /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8
+
     - name: set directories env variables
       become: yes
       become_method: sudo
-      command: source /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+      shell: . ~/.bashrc && . /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+      #command: source ./directories.sh
+      #command: . /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+      #args:
+      #  chdir: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts
 
     - name: set user variables
       become: yes
       become_method: sudo
-      command: source /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/usersAndGroups.sh
+      shell: . ~/.bashrc && . /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/usersAndGroups.sh
+      #command: source ./usersAndGroups.sh
+      #args:
+      #  chdir: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts
+
+    - name: printout environment variables
+      debug: var=ansible_env
 
 #- hosts: namenode
 #  name: namenode only
@@ -151,16 +171,34 @@
       become: yes
       become_method: sudo
       command: mkdir -p $DFS_NAME_DIR
-  
+
     - name: change ownership namenode directories
       become: yes
       become_method: sudo
-      command: chown -R $HDFS_USER:$HADOOP_GROUP $DFS_NAME_DIR
+      file:
+        path: /grid/hadoop/hdfs/nn
+        #path: $DFS_NAME_DIR
+        owner: hdfs
+        #owner: $HDFS_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
 
-    - name: change permissions namenode directories
+    - name: set java to Oracle JAVA
       become: yes
       become_method: sudo
-      command: chmod -R 755 $DFS_NAME_DIR
+      command: alternatives --set java /usr/java/jdk1.8.0_151/bin/java
+#   - name: change ownership namenode directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $HDFS_USER:$HADOOP_GROUP $DFS_NAME_DIR
+
+#   - name: change permissions namenode directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $DFS_NAME_DIR
  
     - name: create secondary namenode directories
       become: yes
@@ -170,12 +208,26 @@
     - name: change ownership secondary namenode directories
       become: yes
       become_method: sudo
-      command: chown -R $HDFS_USER:$HADOOP_GROUP $FS_CHECKPOINT_DIR
+      file:
+        path: /grid/hadoop/hdfs/snn
+        #path: $DFS_NAME_DIR
+        owner: hdfs
+        #owner: $HDFS_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
+
+#   - name: change ownership secondary namenode directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $HDFS_USER:$HADOOP_GROUP $FS_CHECKPOINT_DIR
     
-    - name: change permissions secondary namenode directories
-      become: yes
-      become_method: sudo
-      command: chmod -R 755 $FS_CHECKPOINT_DIR
+#   - name: change permissions secondary namenode directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $FS_CHECKPOINT_DIR
  
     - name: create datanode directories
       become: yes
@@ -185,12 +237,26 @@
     - name: change ownership datanode directories
       become: yes
       become_method: sudo
-      command: chown -R $HDFS_USER:$HADOOP_GROUP $DFS_DATA_DIR
+      file:
+        path: /grid/hadoop/hdfs/dn
+        #path: $DFS_NAME_DIR
+        owner: hdfs
+        #owner: $HDFS_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
 
-    - name: change permissions datanode directories
-      become: yes
-      become_method: sudo
-      command: chmod -R 750 $DFS_DATA_DIR
+#   - name: change ownership datanode directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $HDFS_USER:$HADOOP_GROUP $DFS_DATA_DIR
+
+#   - name: change permissions datanode directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 750 $DFS_DATA_DIR
 
 #- hosts: ResourceManager and all Datanodes
     - name: create YARN directories
@@ -198,15 +264,29 @@
       become_method: sudo
       command: mkdir -p $YARN_LOCAL_DIR
 
-    - name: change ownernership of YARN directories
+    - name: change ownership YARN directories
       become: yes
       become_method: sudo
-      command: chown -R $YARN_USER:$HADOOP_GROUP $YARN_LOCAL_DIR
+      file:
+        path: /grid/hadoop/yarn/local
+        #path: $YARN_LOCAL_DIR
+        owner: yarn
+        #owner: $YARN_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
 
-    - name: change permissions of YARN directories
-      become: yes
-      become_method: sudo
-      command: chmod -R 755 $YARN_LOCAL_DIR
+#   - name: change ownernership of YARN directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $YARN_USER:$HADOOP_GROUP $YARN_LOCAL_DIR
+
+#   - name: change permissions of YARN directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $YARN_LOCAL_DIR
 
 # CREATE LOG and PID Directories
     - name: create log directories
@@ -214,30 +294,58 @@
       become_method: sudo
       command: mkdir -p $HDFS_LOG_DIR
 
-    - name: change ownership of LOG directories
+    - name: change ownership LOG directories
       become: yes
       become_method: sudo
-      command: chown -R $HDFS_USER:$HADOOP_GROUP $HDFS_LOG_DIR
+      file:
+        path: /var/log/hadoop/hdfs
+        #path: $HDFS_LOG_DIR
+        owner: hdfs
+        #owner: $HDFS_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
 
-    - name: change permissions of LOG directories
-      become: yes
-      become_method: sudo
-      command: chmod -R 755 $HDFS_LOG_DIR
+#   - name: change ownership of LOG directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $HDFS_USER:$HADOOP_GROUP $HDFS_LOG_DIR
+
+#   - name: change permissions of LOG directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $HDFS_LOG_DIR
 
     - name: create YARN Logs Directories
       become: yes
       become_method: sudo
       command: mkdir -p $YARN_LOG_DIR
 
-    - name: change ownership YARN Logs Directories
+    - name: change ownership YARN LOG directories
       become: yes
       become_method: sudo
-      command: chown -R $YARN_USER:$HADOOP_GROUP $YARN_LOG_DIR
+      file:
+        path: /var/log/hadoop/yarn
+        #path: $YARN_LOG_DIR
+        owner: yarn
+        #owner: $YARN_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
 
-    - name: change permissions YARN Logs Directories
-      become: yes
-      become_method: sudo
-      command: chmod -R 755 $YARN_LOG_DIR
+#   - name: change ownership YARN Logs Directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $YARN_USER:$HADOOP_GROUP $YARN_LOG_DIR
+
+#   - name: change permissions YARN Logs Directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $YARN_LOG_DIR
 
 # All Nodes
 # HDFS Process
@@ -246,15 +354,29 @@
       become_method: sudo
       command: mkdir -p $HDFS_PID_DIR
 
-    - name: change ownership of HDFS Process Directories
+    - name: change ownership HDFS PID directories
       become: yes
       become_method: sudo
-      command: chown -R $HDFS_USER:$HDFS_GROUP $HDFS_PID_DIR
+      file:
+        path: /var/run/hadoop/hdfs
+        #path: $HDFS_LOG_DIR
+        owner: hdfs
+        #owner: $HDFS_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
 
-    - name: change permissions of HDFS Process Directories
-      become: yes
-      become_method: sudo
-      command: chmod -R 755 $HDFS_PID_DIR
+#   - name: change ownership of HDFS Process Directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $HDFS_USER:$HDFS_GROUP $HDFS_PID_DIR
+
+#   - name: change permissions of HDFS Process Directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $HDFS_PID_DIR
 
 # YARN Process ID
 
@@ -263,15 +385,29 @@
       become_method: sudo
       command: mkdir -p $YARN_PID_DIR
 
-    - name: change ownership of YARN Process Directories
+    - name: change ownership YARN PID directories
       become: yes
       become_method: sudo
-      command: chown -R $YARN_USER:$HDFS_GROUP $YARN_PID_DIR
+      file:
+        path: /var/run/hadoop/yarn
+        #path: $YARN_PID_DIR
+        owner: yarn
+        #owner: $YARN_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
 
-    - name: change permissions of YARN Process Directories
-      become: yes
-      become_method: sudo
-      command: chmod -R 755 $YARN_PID_DIR
+#   - name: change ownership of YARN Process Directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $YARN_USER:$HDFS_GROUP $YARN_PID_DIR
+
+#   - name: change permissions of YARN Process Directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $YARN_PID_DIR
 
 # JobHistory Log
 
@@ -280,15 +416,29 @@
       become_method: sudo
       command: mkdir -p $MAPRED_LOG_DIR
 
-    - name: change ownership of JobHistory Server LOGS Directories
+    - name: change ownership JobHistory Server LOGS directories
       become: yes
       become_method: sudo
-      command: chown -R $MAPRED_USER:$HDFS_GROUP $MAPRED_LOG_DIR
+      file:
+        path: /var/log/hadoop/mapred
+        #path: $MAPRED_PID_DIR
+        owner: mapred
+        #owner: $MAPRED_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
 
-    - name: change permissions of JobHistory Server LOGS Directories
-      become: yes
-      become_method: sudo
-      command: chmod -R 755 $MAPRED_LOG_DIR
+#   - name: change ownership of JobHistory Server LOGS Directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $MAPRED_USER:$HDFS_GROUP $MAPRED_LOG_DIR
+
+#   - name: change permissions of JobHistory Server LOGS Directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $MAPRED_LOG_DIR
 
 # JobHistory Server Process ID
 
@@ -297,13 +447,27 @@
       become_method: sudo
       command: mkdir -p $MAPRED_PID_DIR
 
-    - name: change ownership of JobHistory Server Process ID Directories
+    - name: change ownership JobHistory Server PID directories
       become: yes
       become_method: sudo
-      command: chown -R $MAPRED_USER:$HDFS_GROUP $MAPRED_PID_DIR
+      file:
+        path: /var/run/hadoop/mapred
+        #path: $MAPRED_PID_DIR
+        owner: mapred
+        #owner: $MAPRED_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
 
-    - name: change permissions of JobHistory Server Process ID Directories
-      become: yes
-      become_method: sudo
-      command: chmod -R 755 $MAPRED_PID_DIR
+#   - name: change ownership of JobHistory Server Process ID Directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $MAPRED_USER:$HDFS_GROUP $MAPRED_PID_DIR
+
+#   - name: change permissions of JobHistory Server Process ID Directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $MAPRED_PID_DIR
 
