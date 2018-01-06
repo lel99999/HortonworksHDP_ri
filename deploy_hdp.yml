@@ -1,18 +1,52 @@
 ---
-- hosts: hdp
-  name: Install Core HDP 
+- hosts: hdptest
+  vars:
+    download_url: http://download.oracle.com/otn-pub/java/jdk/8u151-b12/e758a0de34e24606bca991d704f6dcbf/jdk-8u151-linux-x64.tar.gz
+    java_archive: /opt/jdk-8u151-linux-x64.tar.gz
+    java_name: /usr/java/jdk1.8.0_151
+    namenode_dirs: /grid/hadoop/hdfs/nn
+    secondary_namenode_dirs: /grid/hadoop/hdfs/snn
+    data_dirs: /grid/hadoop/hdfs/dn
+    yarn_local_dirs: /grid/hadoop/yarn/local 
+    yarn_local_log_dirs: /grid/hadoop/yarn/logs
+    zookeeper_data_dirs: /grid/hadoop/zookeeper/data
+    
+  name: experimental deployment
   tasks:
-    - name: 
+    - name: install oracle java 8 and set JCE8 crypto policy to unlimited
+      static: no
+      include_role:
+        name: oracle_java8
+
+    - name: add HDP 2.6.3.x repo
       become: yes
       become_method: sudo
-      shell: wget -nv http://public-repo-1.hortonworks.com/HDP/centos6/2.x/updates/2.6.2.0/hdp.repo -O /etc/yum.repos.d/hdp.repo
+      yum_repository:
+        name: HDP2.6
+        description: Hortonworks HDP 2.6
+#       baseurl: URL    http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/2.6.3.0
+#        baseurl: "{{ item }}"
+        baseurl: "http://public-repo-1.hortonworks.com/HDP/centos6/2.x/updates/2.6.3.0"
+        gpgcheck: no
+        enabled: yes
+#      with_items:
+#        - "http://public-repo-1.hortonworks.com/HDP/centos6/2.x/updates/2.6.3.0"
+#        - "http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.21/repos/centos6"
+    - name: add HDP Utils repo
+      become: yes
+      become_method: sudo
+      yum_repository:
+        name: HDP2.6 Utils
+        description: Hortonworks HDP 2.6 Utils
+        baseurl: "http://public-repo-1.hortonworks.com/HDP-UTILS-1.1.0.21/repos/centos6"
+        gpgcheck: no
+        enabled: yes
 
-    - name: install core hadoop
+    - name: install HDP base packages
       become: yes
       become_method: sudo
       yum:
-        name: "{{ item }}"
-        state: present
+        name: "{{item}}"
       with_items:
         - hadoop
         - hadoop-hdfs
@@ -21,3 +55,538 @@
         - hadoop-mapreduce
         - hadoop-client
         - openssl
+     # install compression libraries
+        - snappy
+        - snappy-devel
+        - lzo
+        - lzo-devel
+        - hadooplzo
+        - hadooplzo-native
+
+    - name: download HDP helper files
+      become: yes
+      become_method: sudo
+      #command: wget -O /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8.tar.gz http://public-repo-1.hortonworks.com/HDP/tools/2.6.0.3/hdp_manual_install_rpm_helper_files-2.6.0.3.8.tar.gz
+      get_url:
+        url: http://public-repo-1.hortonworks.com/HDP/tools/2.6.0.3/hdp_manual_install_rpm_helper_files-2.6.0.3.8.tar.gz
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8.tar.gz
+        mode: 0755
+
+    - name: extract HDP helper files
+      become: yes
+      become_method: sudo
+      command: tar xf hdp_manual_install_rpm_helper_files-2.6.0.3.8.tar.gz
+      args:
+        chdir: /opt
+
+    - name: chamge permissions on helper files
+      become: yes
+      become_method: sudo
+      command: chmod -R 755 /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts
+
+    - name: NAMENODE variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+        regexp: 'TODO-LIST-OF-NAMENODE-DIRS'
+        line: 'DFS_NAME_DIR={{ namenode_dirs }}'
+        state: present
+
+    - name: SECONDARY NAMENODE variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+        regexp: 'TODO-LIST-OF-SECONDARY-NAMENODE-DIRS'
+        line: 'FS_CHECKPOINT_DIR={{ secondary_namenode_dirs }}'
+        state: present
+
+    - name: DATANODE variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+        regexp: 'TODO-LIST-OF-DATA-DIRS'
+        line: 'DFS_DATA_DIR={{ data_dirs }}'
+        state: present
+
+    - name: YARN LOCAL variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+        regexp: 'TODO-LIST-OF-YARN-LOCAL-DIRS'
+        line: 'YARN_LOCAL_DIR={{ yarn_local_dirs }}'
+        state: present
+
+    - name: YARN LOG variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+        regexp: 'TODO-LIST-OF-YARN-LOCAL-LOG-DIRS'
+        line: 'YARN_LOCAL_LOG_DIR={{ yarn_local_log_dirs }}'
+        state: present
+
+    - name: ZOOKEEPER variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+        regexp: 'TODO-ZOOKEEPER-DATA-DIR'
+        line: 'ZOOKEEPER_DATA_DIR={{ zookeeper_data_dirs }}'
+        state: present
+
+    - name: change ownership of HDP Helper directory
+      become: yes
+      become_method: sudo
+      command: chown -R root:root /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8
+
+    - name: set directories env variables
+      become: yes
+      become_method: sudo
+      shell: . ~/.bashrc && . /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+      #command: source ./directories.sh
+      #command: . /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/directories.sh
+      #args:
+      #  chdir: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts
+
+    - name: set user variables
+      become: yes
+      become_method: sudo
+      shell: . ~/.bashrc && . /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts/usersAndGroups.sh
+      #command: source ./usersAndGroups.sh
+      #args:
+      #  chdir: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/scripts
+
+    - name: printout environment variables
+      debug: var=ansible_env
+
+#- hosts: namenode
+#  name: namenode only
+#  tasks:
+
+    - name: create namenode directories
+      become: yes
+      become_method: sudo
+      command: mkdir -p $DFS_NAME_DIR
+
+    - name: change ownership namenode directories
+      become: yes
+      become_method: sudo
+      file:
+        path: /grid/hadoop/hdfs/nn
+        #path: $DFS_NAME_DIR
+        owner: hdfs
+        #owner: $HDFS_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
+
+    - name: set java to Oracle JAVA
+      become: yes
+      become_method: sudo
+      command: alternatives --set java /usr/java/jdk1.8.0_151/bin/java
+#   - name: change ownership namenode directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $HDFS_USER:$HADOOP_GROUP $DFS_NAME_DIR
+
+#   - name: change permissions namenode directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $DFS_NAME_DIR
+ 
+    - name: create secondary namenode directories
+      become: yes
+      become_method: sudo
+      command: mkdir -p $FS_CHECKPOINT_DIR
+  
+    - name: change ownership secondary namenode directories
+      become: yes
+      become_method: sudo
+      file:
+        path: /grid/hadoop/hdfs/snn
+        #path: $DFS_NAME_DIR
+        owner: hdfs
+        #owner: $HDFS_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
+
+#   - name: change ownership secondary namenode directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $HDFS_USER:$HADOOP_GROUP $FS_CHECKPOINT_DIR
+    
+#   - name: change permissions secondary namenode directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $FS_CHECKPOINT_DIR
+ 
+    - name: create datanode directories
+      become: yes
+      become_method: sudo
+      command: mkdir -p $DFS_DATA_DIR
+   
+    - name: change ownership datanode directories
+      become: yes
+      become_method: sudo
+      file:
+        path: /grid/hadoop/hdfs/dn
+        #path: $DFS_NAME_DIR
+        owner: hdfs
+        #owner: $HDFS_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
+
+#   - name: change ownership datanode directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $HDFS_USER:$HADOOP_GROUP $DFS_DATA_DIR
+
+#   - name: change permissions datanode directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 750 $DFS_DATA_DIR
+
+#- hosts: ResourceManager and all Datanodes
+    - name: create YARN directories
+      become: yes
+      become_method: sudo
+      command: mkdir -p $YARN_LOCAL_DIR
+
+    - name: change ownership YARN directories
+      become: yes
+      become_method: sudo
+      file:
+        path: /grid/hadoop/yarn/local
+        #path: $YARN_LOCAL_DIR
+        owner: yarn
+        #owner: $YARN_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
+
+#   - name: change ownernership of YARN directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $YARN_USER:$HADOOP_GROUP $YARN_LOCAL_DIR
+
+#   - name: change permissions of YARN directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $YARN_LOCAL_DIR
+
+# CREATE LOG and PID Directories
+    - name: create log directories
+      become: yes
+      become_method: sudo
+      command: mkdir -p $HDFS_LOG_DIR
+
+    - name: change ownership LOG directories
+      become: yes
+      become_method: sudo
+      file:
+        path: /var/log/hadoop/hdfs
+        #path: $HDFS_LOG_DIR
+        owner: hdfs
+        #owner: $HDFS_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
+
+#   - name: change ownership of LOG directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $HDFS_USER:$HADOOP_GROUP $HDFS_LOG_DIR
+
+#   - name: change permissions of LOG directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $HDFS_LOG_DIR
+
+    - name: create YARN Logs Directories
+      become: yes
+      become_method: sudo
+      command: mkdir -p $YARN_LOG_DIR
+
+    - name: change ownership YARN LOG directories
+      become: yes
+      become_method: sudo
+      file:
+        path: /var/log/hadoop/yarn
+        #path: $YARN_LOG_DIR
+        owner: yarn
+        #owner: $YARN_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
+
+#   - name: change ownership YARN Logs Directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $YARN_USER:$HADOOP_GROUP $YARN_LOG_DIR
+
+#   - name: change permissions YARN Logs Directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $YARN_LOG_DIR
+
+# All Nodes
+# HDFS Process
+    - name: create HDFS Process Directories 
+      become: yes
+      become_method: sudo
+      command: mkdir -p $HDFS_PID_DIR
+
+    - name: change ownership HDFS PID directories
+      become: yes
+      become_method: sudo
+      file:
+        path: /var/run/hadoop/hdfs
+        #path: $HDFS_LOG_DIR
+        owner: hdfs
+        #owner: $HDFS_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
+
+#   - name: change ownership of HDFS Process Directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $HDFS_USER:$HDFS_GROUP $HDFS_PID_DIR
+
+#   - name: change permissions of HDFS Process Directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $HDFS_PID_DIR
+
+# YARN Process ID
+
+    - name: create YARN Process Directories 
+      become: yes
+      become_method: sudo
+      command: mkdir -p $YARN_PID_DIR
+
+    - name: change ownership YARN PID directories
+      become: yes
+      become_method: sudo
+      file:
+        path: /var/run/hadoop/yarn
+        #path: $YARN_PID_DIR
+        owner: yarn
+        #owner: $YARN_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
+
+#   - name: change ownership of YARN Process Directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $YARN_USER:$HDFS_GROUP $YARN_PID_DIR
+
+#   - name: change permissions of YARN Process Directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $YARN_PID_DIR
+
+# JobHistory Log
+
+    - name: create JobHistory Server LOGS Directories 
+      become: yes
+      become_method: sudo
+      command: mkdir -p $MAPRED_LOG_DIR
+
+    - name: change ownership JobHistory Server LOGS directories
+      become: yes
+      become_method: sudo
+      file:
+        path: /var/log/hadoop/mapred
+        #path: $MAPRED_PID_DIR
+        owner: mapred
+        #owner: $MAPRED_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
+
+#   - name: change ownership of JobHistory Server LOGS Directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $MAPRED_USER:$HDFS_GROUP $MAPRED_LOG_DIR
+
+#   - name: change permissions of JobHistory Server LOGS Directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $MAPRED_LOG_DIR
+
+# JobHistory Server Process ID
+
+    - name: create JobHistory Server Process ID Directories 
+      become: yes
+      become_method: sudo
+      command: mkdir -p $MAPRED_PID_DIR
+
+    - name: change ownership JobHistory Server PID directories
+      become: yes
+      become_method: sudo
+      file:
+        path: /var/run/hadoop/mapred
+        #path: $MAPRED_PID_DIR
+        owner: mapred
+        #owner: $MAPRED_USER 
+        group: hadoop
+        #group: $HADOOP_GROUP
+        mode: 0755    
+        recurse: yes 
+        state: directory
+
+#   - name: change ownership of JobHistory Server Process ID Directories
+#     become: yes
+#     become_method: sudo
+#     command: chown -R $MAPRED_USER:$HDFS_GROUP $MAPRED_PID_DIR
+
+#   - name: change permissions of JobHistory Server Process ID Directories
+#     become: yes
+#     become_method: sudo
+#     command: chmod -R 755 $MAPRED_PID_DIR
+# Configuration files
+
+#container-executor.cfg:1:yarn.nodemanager.local-dirs=TODO-YARN-LOCAL-DIR
+#container-executor.cfg:3:yarn.nodemanager.log-dirs=TODO-YARN-LOG-DIR
+#core-site.xml:76:    <value>hdfs://TODO-NAMENODE-HOSTNAME:PORT</value>
+#hadoop-env.sh:31:#TODO: if env var set that can cause problems
+#hadoop-metrics2.properties-GANGLIA:30:namenode.sink.ganglia.servers=TODO-GANGLIA-SERVER:8661
+#hadoop-metrics2.properties-GANGLIA:31:datanode.sink.ganglia.servers=TODO-GANGLIA-SERVER:8660
+#hadoop-metrics2.properties-GANGLIA:32:jobtracker.sink.ganglia.servers=TODO-GANGLIA-SERVER:8662
+#hadoop-metrics2.properties-GANGLIA:33:tasktracker.sink.ganglia.servers=TODO-GANGLIA-SERVER:8660
+#hadoop-metrics2.properties-GANGLIA:34:maptask.sink.ganglia.servers=TODO-GANGLIA-SERVER:8660
+#hadoop-metrics2.properties-GANGLIA:35:reducetask.sink.ganglia.servers=TODO-GANGLIA-SERVER:8660
+#hdfs-site.xml:29:    <value>TODO-DFS-DATA-DIR</value>
+#hdfs-site.xml:41:    <value>TODO-NAMENODE-HOSTNAME:50070</value>
+#hdfs-site.xml:61:    <value>TODO-DFS-NAME-DIR</value>
+#hdfs-site.xml:101:    <value>TODO-FS-CHECKPOINT-DIR</value>
+#hdfs-site.xml:141:    <value>TODO-SECONDARYNAMENODE-HOSTNAME:50090</value>
+#mapred-site.xml:17:    <value>TODO-JOBHISTORYNODE-HOSTNAME:10020</value>
+#mapred-site.xml:61:    <value>TODO-JOBHISTORYNODE-HOSTNAME:19888</value>
+#yarn-site.xml:9:    <value>TODO-YARN-LOCAL-DIR</value>
+#yarn-site.xml:29:    <value>TODO-RMNODE-HOSTNAME:19888/jobhistory/logs</value>
+#yarn-site.xml:33:    <value>TODO-RMNODE-HOSTNAME:8141</value>
+#yarn-site.xml:57:    <value>TODO-YARN-LOCAL-LOG-DIR</value>
+#yarn-site.xml:69:    <value>TODO-RMNODE-HOSTNAME:8025</value>
+#yarn-site.xml:105:    <value>TODO-RMNODE-HOSTNAME:8088</value>
+#yarn-site.xml:113:    <value>TODO-RMNODE-HOSTNAME:8050</value>
+#yarn-site.xml:129:    <value>TODO-RMNODE-HOSTNAME:8030</value>
+  vars:
+    yarn_local_dir: /grid/hadoop/yarn/local
+    yarn_log_dir: /var/log/yarn
+    yarn_local_log_dir: /var/log/yarn/locallog
+    namenode_hostname: 192.168.60.160
+    dfs_data_dir: /grid/hadoop/hdfs/dn
+    dfs_name_dir: /grid/hadoop/hdfs/nn
+    fs_checkpoint_dir: /grid/hadoop/hdfs/snn
+    secondarynamenode_hostname: 192.168.60.161
+    jobhistorynode_hostname: 192.168.60.161
+    resourcemanagernode_hostname: 192.168.60.161  #RMNODE-HOSTNAME
+# Configuration variable injection     
+    - name: YARN LOCAL LOG variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/container-executor.cfg
+        regexp: 'TODO-YARN-LOCAL-LOG-DIR'
+        line: '<value>{{ yarn_local_log_dir }}</value>'
+        state: present
+
+    - name: YARN LOG DIR variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/container-executor.cfg
+        regexp: 'TODO-YARN-LOG-DIR'
+        line: '<value>{{ yarn_log_dir }}</value>'
+        state: present
+
+    - name: core-site.xml namenode variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core-site.xml
+        regexp: 'TODO-NAMENODE-HOSTNAME:PORT'
+        line: '<value>{{ namenode_hostname }}:8020</value>'
+        state: present
+
+# variable injection for hdfs-site.xml
+    - name: hdfs-site.xml variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/hdfs-site.xml
+        regexp: 'TODO-DFS-DATA-DIR'
+        line: '<value>{{dfs_data_dir}}</value>'
+        state: present
+
+    - name: hdfs-site.xml variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/hdfs-site.xml
+        regexp: 'TODO-NAMENODE-HOSTNAME'
+        line: '<value>{{namenode_hostname}}</value>'
+        state: present
+
+
+    - name: copy configuration files to /etc/hadoop/conf
+      become: yes
+      become_method: sudo
+      file:
+        src: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/hadoop-core
+        dest: /etc/hadoop/conf
+        recurse: yes
+        state: present
+
+# Validating Core Hadoop
+- hosts: nn01
+  name: namenode tasks only
+  tasks:
+
+   - name: set env variable JAVA_HOME
+     become: yes
+     become_method: sudo
+     shell: shell: . ~/.bashrc && export JAVA_HOME=/usr/java/jdk1.8.0_151
+     
+
+   - name: Run as user hdfs
+     become: yes
+     become_method: sudo
+     command: 
+     
+     
+- hosts: snn01
+  name: namenode tasks only
+  tasks:
+
+- hosts: datanodes
+  name: namenode tasks only
+  tasks:
+
