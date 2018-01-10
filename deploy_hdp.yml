@@ -501,13 +501,13 @@
     yarn_local_dir: /grid/hadoop/yarn/local
     yarn_log_dir: /var/log/yarn
     yarn_local_log_dir: /var/log/yarn/locallog
-    namenode_hostname: 192.168.60.160
+    namenode_hostname:
     dfs_data_dir: /grid/hadoop/hdfs/dn
     dfs_name_dir: /grid/hadoop/hdfs/nn
     fs_checkpoint_dir: /grid/hadoop/hdfs/snn
-    secondarynamenode_hostname: 192.168.60.161
-    jobhistorynode_hostname: 192.168.60.161
-    resourcemanagernode_hostname: 192.168.60.161  #RMNODE-HOSTNAME
+    secondarynamenode_hostname: 
+    jobhistorynode_hostname: 
+    resourcemanagernode_hostname:          #RMNODE-HOSTNAME
 # Configuration variable injection     
     - name: YARN LOCAL LOG variable injection
       become: yes
@@ -550,7 +550,7 @@
       become: yes
       become_method: sudo
       lineinfile:
-        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/hdfs-site.xml
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/hdfs-site.xml
         regexp: 'TODO-NAMENODE-HOSTNAME'
         line: '<value>{{namenode_hostname}}</value>'
         state: present
@@ -560,7 +560,7 @@
       become: yes
       become_method: sudo
       file:
-        src: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/hadoop-core
+        src: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/core-site.xml
         dest: /etc/hadoop/conf
         recurse: yes
         state: present
