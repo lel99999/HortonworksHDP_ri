@@ -10,7 +10,17 @@
     yarn_local_dirs: /grid/hadoop/yarn/local 
     yarn_local_log_dirs: /grid/hadoop/yarn/logs
     zookeeper_data_dirs: /grid/hadoop/zookeeper/data
-    
+
+    yarn_local_dir: /grid/hadoop/yarn/local
+    yarn_log_dir: /var/log/yarn
+    yarn_local_log_dir: /var/log/yarn/locallog
+    namenode_hostname: 192.168.60.160
+    dfs_data_dir: /grid/hadoop/hdfs/dn
+    dfs_name_dir: /grid/hadoop/hdfs/nn
+    fs_checkpoint_dir: /grid/hadoop/hdfs/snn
+    secondarynamenode_hostname: 192.168.60.161
+    jobhistorynode_hostname: 192.168.60.161
+    resourcemanagernode_hostname: 192.168.60.161  #RMNODE-HOSTNAME
   name: experimental deployment
   tasks:
     - name: install oracle java 8 and set JCE8 crypto policy to unlimited
@@ -497,23 +507,24 @@
 #yarn-site.xml:105:    <value>TODO-RMNODE-HOSTNAME:8088</value>
 #yarn-site.xml:113:    <value>TODO-RMNODE-HOSTNAME:8050</value>
 #yarn-site.xml:129:    <value>TODO-RMNODE-HOSTNAME:8030</value>
-  vars:
-    yarn_local_dir: /grid/hadoop/yarn/local
-    yarn_log_dir: /var/log/yarn
-    yarn_local_log_dir: /var/log/yarn/locallog
-    namenode_hostname: 192.168.60.160
-    dfs_data_dir: /grid/hadoop/hdfs/dn
-    dfs_name_dir: /grid/hadoop/hdfs/nn
-    fs_checkpoint_dir: /grid/hadoop/hdfs/snn
-    secondarynamenode_hostname: 192.168.60.161
-    jobhistorynode_hostname: 192.168.60.161
-    resourcemanagernode_hostname: 192.168.60.161  #RMNODE-HOSTNAME
+# vars:
+#   yarn_local_dir: /grid/hadoop/yarn/local
+#   yarn_log_dir: /var/log/yarn
+#   yarn_local_log_dir: /var/log/yarn/locallog
+#   namenode_hostname: 192.168.60.160
+#   dfs_data_dir: /grid/hadoop/hdfs/dn
+#   dfs_name_dir: /grid/hadoop/hdfs/nn
+#   fs_checkpoint_dir: /grid/hadoop/hdfs/snn
+#   secondarynamenode_hostname: 192.168.60.161
+#   jobhistorynode_hostname: 192.168.60.161
+#   resourcemanagernode_hostname: 192.168.60.161  #RMNODE-HOSTNAME
+
 # Configuration variable injection     
     - name: YARN LOCAL LOG variable injection
       become: yes
       become_method: sudo
       lineinfile:
-        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/container-executor.cfg
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/container-executor.cfg
         regexp: 'TODO-YARN-LOCAL-LOG-DIR'
         line: '<value>{{ yarn_local_log_dir }}</value>'
         state: present
@@ -522,7 +533,7 @@
       become: yes
       become_method: sudo
       lineinfile:
-        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/container-executor.cfg
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/container-executor.cfg
         regexp: 'TODO-YARN-LOG-DIR'
         line: '<value>{{ yarn_log_dir }}</value>'
         state: present
@@ -531,39 +542,156 @@
       become: yes
       become_method: sudo
       lineinfile:
-        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core-site.xml
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/core-site.xml
         regexp: 'TODO-NAMENODE-HOSTNAME:PORT'
         line: '<value>{{ namenode_hostname }}:8020</value>'
         state: present
 
 # variable injection for hdfs-site.xml
-    - name: hdfs-site.xml variable injection
+    - name: hdfs-site.xml variable injection - 01
       become: yes
       become_method: sudo
       lineinfile:
-        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/hdfs-site.xml
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/hdfs-site.xml
         regexp: 'TODO-DFS-DATA-DIR'
         line: '<value>{{dfs_data_dir}}</value>'
         state: present
 
-    - name: hdfs-site.xml variable injection
+    - name: hdfs-site.xml variable injection - 02
       become: yes
       become_method: sudo
       lineinfile:
-        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/hdfs-site.xml
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/hdfs-site.xml
         regexp: 'TODO-NAMENODE-HOSTNAME'
         line: '<value>{{namenode_hostname}}</value>'
         state: present
 
+    - name: hdfs-site.xml variable injection - 03
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/hdfs-site.xml
+        regexp: 'TODO-DFS-NAME-DIR'
+        line: '<value>{{dfs_name_dir}}</value>'
+        state: present
 
-    - name: copy configuration files to /etc/hadoop/conf
+    - name: hdfs-site.xml variable injection - 04
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/hdfs-site.xml
+        regexp: 'TODO-FS-CHECKPOINT-DIR'
+        line: '<value>{{fs_checkpoint_dir}}</value>'
+        state: present
+
+    - name: hdfs-site.xml variable injection - 05
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/hdfs-site.xml
+        regexp: 'TODO-SECONDARYNAMENODE-HOSTNAME'
+        line: '<value>{{secondarynamenode_hostname}}</value>'
+        state: present
+
+    - name: mapred-site.xml variable injection - 01
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/mapred-site.xml
+        regexp: 'TODO-JOBHISTORYNODE-HOSTNAME:10020'
+        line: '<value>{{jobhistorynode_hostname}}:10020</value>'
+        state: present
+
+    - name: mapred-site.xml variable injection - 02
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/mapred-site.xml
+        regexp: 'TODO-JOBHISTORYNODE-HOSTNAME:19888'
+        line: '<value>{{jobhistorynode_hostname}}:19888</value>'
+        state: present
+
+    - name: yarn-site.xml variable injection - 01
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/yarn-site.xml
+        regexp: 'TODO-YARN-LOCAL-DIR'
+        line: '<value>{{yarn_local_dir}}</value>'
+        state: present
+
+    - name: yarn-site.xml variable injection - 02
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/yarn-site.xml
+        regexp: 'TODO-RMNODE-HOSTNAME:19888'
+        line: '<value>{{resourcemanagernode_hostname}}:19888</value>'
+        state: present
+
+    - name: yarn-site.xml variable injection - 03
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/yarn-site.xml
+        regexp: 'TODO-RMNODE-HOSTNAME:8141'
+        line: '<value>{{resourcemanagernode_hostname}}:8141</value>'
+        state: present
+
+    - name: yarn-site.xml variable injection - 04
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/yarn-site.xml
+        regexp: 'TODO-YARN-LOCAL-LOG-DIR'
+        line: '<value>{{yarn_local_log_dir}}</value>'
+        state: present
+
+    - name: yarn-site.xml variable injection - 05
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/yarn-site.xml
+        regexp: 'TODO-RMNODE-HOSTNAME:8025'
+        line: '<value>{{resourcemanagernode_hostname}}:8025</value>'
+        state: present
+
+    - name: yarn-site.xml variable injection - 06
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/yarn-site.xml
+        regexp: 'TODO-RMNODE-HOSTNAME:8088'
+        line: '<value>{{resourcemanagernode_hostname}}:8088</value>'
+        state: present
+
+    - name: yarn-site.xml variable injection - 07
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/yarn-site.xml
+        regexp: 'TODO-RMNODE-HOSTNAME:8050'
+        line: '<value>{{resourcemanagernode_hostname}}:8050</value>'
+        state: present
+
+    - name: yarn-site.xml variable injection - 08
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/yarn-site.xml
+        regexp: 'TODO-RMNODE-HOSTNAME:8030'
+        line: '<value>{{resourcemanagernode_hostname}}:8030</value>'
+        state: present
+
+
+    - name: copy configuration templates to conf directory
       become: yes
       become_method: sudo
       file:
-        src: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/hadoop-core
+        src: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/
         dest: /etc/hadoop/conf
         recurse: yes
-        state: present
+        state: directory
 
 # Validating Core Hadoop
 - hosts: nn01
@@ -573,7 +701,7 @@
    - name: set env variable JAVA_HOME
      become: yes
      become_method: sudo
-     shell: shell: . ~/.bashrc && export JAVA_HOME=/usr/java/jdk1.8.0_151
+     shell: . ~/.bashrc && export JAVA_HOME=/usr/java/jdk1.8.0_151
      
 
    - name: Run as user hdfs
@@ -583,7 +711,7 @@
      
      
 - hosts: snn01
-  name: namenode tasks only
+  name: secondary namenode tasks only
   tasks:
 
 - hosts: datanodes
