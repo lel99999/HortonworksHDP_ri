@@ -1,0 +1,10 @@
+---
+- name: set env variable JAVA_HOME
+  become: yes
+  become_method: sudo
+  shell:  . ~/.bashrc && export JAVA_HOME=/usr/java/jdk1.8.0_151
+
+- name: Run as user hdfs
+  become: yes
+  become_method: sudo
+  command:
