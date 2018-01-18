@@ -1,23 +1,27 @@
 ---
-- hosts: hdptest
+- hosts: dn03
+#- hosts: datanodes 
+#- hosts: snn01
+#- hosts: nn01
+#- hosts: hdptest
   vars:
     download_url: http://download.oracle.com/otn-pub/java/jdk/8u151-b12/e758a0de34e24606bca991d704f6dcbf/jdk-8u151-linux-x64.tar.gz
     java_archive: /opt/jdk-8u151-linux-x64.tar.gz
     java_name: /usr/java/jdk1.8.0_151
-    namenode_dirs: /grid/hadoop/hdfs/nn
-    secondary_namenode_dirs: /grid/hadoop/hdfs/snn
-    data_dirs: /grid/hadoop/hdfs/dn
-    yarn_local_dirs: /grid/hadoop/yarn/local 
-    yarn_local_log_dirs: /grid/hadoop/yarn/logs
-    zookeeper_data_dirs: /grid/hadoop/zookeeper/data
+    namenode_dirs: /hadoop/hdfs/nn
+    secondary_namenode_dirs: /hadoop/hdfs/snn
+    data_dirs: /hadoop/hdfs/dn
+    yarn_local_dirs: /hadoop/yarn/local 
+    yarn_local_log_dirs: /hadoop/yarn/logs
+    zookeeper_data_dirs: /hadoop/zookeeper/data
 
-    yarn_local_dir: /grid/hadoop/yarn/local
+    yarn_local_dir: /hadoop/yarn/local
     yarn_log_dir: /var/log/yarn
     yarn_local_log_dir: /var/log/yarn/locallog
     namenode_hostname: 192.168.60.160
-    dfs_data_dir: /grid/hadoop/hdfs/dn
-    dfs_name_dir: /grid/hadoop/hdfs/nn
-    fs_checkpoint_dir: /grid/hadoop/hdfs/snn
+    dfs_data_dir: /hadoop/hdfs/dn
+    dfs_name_dir: /hadoop/hdfs/nn
+    fs_checkpoint_dir: /hadoop/hdfs/snn
     secondarynamenode_hostname: 192.168.60.161
     jobhistorynode_hostname: 192.168.60.161
     resourcemanagernode_hostname: 192.168.60.161  #RMNODE-HOSTNAME
@@ -186,7 +190,7 @@
       become: yes
       become_method: sudo
       file:
-        path: /grid/hadoop/hdfs/nn
+        path: /hadoop/hdfs/nn
         #path: $DFS_NAME_DIR
         owner: hdfs
         #owner: $HDFS_USER 
@@ -205,6 +209,11 @@
 #     become_method: sudo
 #     command: chown -R $HDFS_USER:$HADOOP_GROUP $DFS_NAME_DIR
 
+    - name: set java default pointer
+      become: yes
+      become_method: sudo
+      command: ln -s /usr/java/jdk1.8.0_151 /usr/java/default
+
 #   - name: change permissions namenode directories
 #     become: yes
 #     become_method: sudo
@@ -219,7 +228,7 @@
       become: yes
       become_method: sudo
       file:
-        path: /grid/hadoop/hdfs/snn
+        path: /hadoop/hdfs/snn
         #path: $DFS_NAME_DIR
         owner: hdfs
         #owner: $HDFS_USER 
@@ -248,7 +257,7 @@
       become: yes
       become_method: sudo
       file:
-        path: /grid/hadoop/hdfs/dn
+        path: /hadoop/hdfs/dn
         #path: $DFS_NAME_DIR
         owner: hdfs
         #owner: $HDFS_USER 
@@ -278,7 +287,7 @@
       become: yes
       become_method: sudo
       file:
-        path: /grid/hadoop/yarn/local
+        path: /hadoop/yarn/local
         #path: $YARN_LOCAL_DIR
         owner: yarn
         #owner: $YARN_USER 
@@ -544,7 +553,7 @@
       lineinfile:
         dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/core-site.xml
         regexp: 'TODO-NAMENODE-HOSTNAME:PORT'
-        line: '<value>{{ namenode_hostname }}:8020</value>'
+        line: '<value>hdfs://{{ namenode_hostname }}:8020</value>'
         state: present
 
 # variable injection for hdfs-site.xml
@@ -563,7 +572,8 @@
       lineinfile:
         dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/hdfs-site.xml
         regexp: 'TODO-NAMENODE-HOSTNAME'
-        line: '<value>{{namenode_hostname}}</value>'
+        line: '<value>{{namenode_hostname}}:50070</value>'
+        #line: '<value>{{namenode_hostname}}</value>'
         state: present
 
     - name: hdfs-site.xml variable injection - 03
@@ -687,11 +697,14 @@
     - name: copy configuration templates to conf directory
       become: yes
       become_method: sudo
-      file:
-        src: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/
-        dest: /etc/hadoop/conf
-        recurse: yes
-        state: directory
+      shell: 'command cp -f /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/* /etc/hadoop/conf/'
+      #command: 'command cp -f /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/* /etc/hadoop/conf/'
+      #prefix \cp to bypass alias cp
+      #copy:
+      #  src: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/
+      #  dest: /etc/hadoop/conf
+      #  remote_src: yes
+        #directory_mode: yes
 
 # Validating Core Hadoop
 - hosts: nn01
@@ -707,14 +720,14 @@
    - name: Run as user hdfs
      become: yes
      become_method: sudo
-     command: 
+     command: ls /tmp
      
      
-- hosts: snn01
-  name: secondary namenode tasks only
-  tasks:
+#- hosts: snn01
+#  name: secondary namenode tasks only
+#  tasks:
 
-- hosts: datanodes
-  name: namenode tasks only
-  tasks:
+#- hosts: datanodes
+#  name: namenode tasks only
+#  tasks:
 

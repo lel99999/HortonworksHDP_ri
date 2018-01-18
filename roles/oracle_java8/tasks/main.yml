@@ -7,8 +7,8 @@
   stat: path=/opt/jdk-8u151-linux-x64.tar.gz
   register: jdk8file
 
-#- name: print jdk8file status
-#  debug: msg={{jdk8file.stat}}
+- name: print jdk8file status
+  debug: msg={{jdk8file.stat}}
 
 - name: check if oracle java 8 exists
   stat: path=/usr/java/jdk1.8.0_151/bin/
@@ -55,6 +55,7 @@
     src: "{{java_archive}}"
     dest: /opt
     remote_src: yes
+  when: not jdk8.stat.exists
   #command:  'tar xf {{java_archive}} -C "/opt" creates={{java_name}}'
   #args:
   #  creates:  /usr/java
