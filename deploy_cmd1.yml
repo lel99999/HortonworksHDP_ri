@@ -1,0 +1,9 @@
+---
+- hosts: dn03
+  name: test execute
+  tasks:
+    - name: copy configuration templates to conf directory
+      become: yes
+      become_method: sudo
+      shell: 'command cp -f /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/* /etc/hadoop/conf/'
+      #command: 'command cp -f /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/* /etc/hadoop/conf/'

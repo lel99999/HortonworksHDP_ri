@@ -529,23 +529,41 @@
 #   resourcemanagernode_hostname: 192.168.60.161  #RMNODE-HOSTNAME
 
 # Configuration variable injection     
-    - name: YARN LOCAL LOG variable injection
+    - name: YARN container-executor variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/container-executor.cfg
+        regexp: 'TODO-YARN-LOCAL-DIR'
+        line: 'yarn.nodemanager.local-dirs={{ yarn_local_log_dir }}'
+        state: present
+
+    - name: YARN container-executor variable injection
       become: yes
       become_method: sudo
       lineinfile:
         dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/container-executor.cfg
         regexp: 'TODO-YARN-LOCAL-LOG-DIR'
-        line: '<value>{{ yarn_local_log_dir }}</value>'
+        line: 'yarn.nodemanager.log-dirs={{ yarn_local_log_dir }}'
         state: present
 
-    - name: YARN LOG DIR variable injection
-      become: yes
-      become_method: sudo
-      lineinfile:
-        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/container-executor.cfg
-        regexp: 'TODO-YARN-LOG-DIR'
-        line: '<value>{{ yarn_log_dir }}</value>'
-        state: present
+#   - name: YARN LOCAL LOG variable injection
+#     become: yes
+#     become_method: sudo
+#     lineinfile:
+#       dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/container-executor.cfg
+#       regexp: 'TODO-YARN-LOCAL-LOG-DIR'
+#       line: '<value>{{ yarn_local_log_dir }}</value>'
+#       state: present
+
+#   - name: YARN LOG DIR variable injection
+#     become: yes
+#     become_method: sudo
+#     lineinfile:
+#       dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/container-executor.cfg
+#       regexp: 'TODO-YARN-LOG-DIR'
+#       line: '<value>{{ yarn_log_dir }}</value>'
+#       state: present
 
     - name: core-site.xml namenode variable injection
       become: yes
