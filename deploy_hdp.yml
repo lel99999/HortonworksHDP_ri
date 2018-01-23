@@ -1,5 +1,5 @@
 ---
-- hosts: dn03
+- hosts: snn01
 #- hosts: datanodes 
 #- hosts: snn01
 #- hosts: nn01
@@ -529,23 +529,41 @@
 #   resourcemanagernode_hostname: 192.168.60.161  #RMNODE-HOSTNAME
 
 # Configuration variable injection     
-    - name: YARN LOCAL LOG variable injection
+    - name: YARN container-executor variable injection
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/container-executor.cfg
+        regexp: 'TODO-YARN-LOCAL-DIR'
+        line: 'yarn.nodemanager.local-dirs={{ yarn_local_log_dir }}'
+        state: present
+
+    - name: YARN container-executor variable injection
       become: yes
       become_method: sudo
       lineinfile:
         dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/container-executor.cfg
         regexp: 'TODO-YARN-LOCAL-LOG-DIR'
-        line: '<value>{{ yarn_local_log_dir }}</value>'
+        line: 'yarn.nodemanager.log-dirs={{ yarn_local_log_dir }}'
         state: present
 
-    - name: YARN LOG DIR variable injection
-      become: yes
-      become_method: sudo
-      lineinfile:
-        dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/container-executor.cfg
-        regexp: 'TODO-YARN-LOG-DIR'
-        line: '<value>{{ yarn_log_dir }}</value>'
-        state: present
+#   - name: YARN LOCAL LOG variable injection
+#     become: yes
+#     become_method: sudo
+#     lineinfile:
+#       dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/container-executor.cfg
+#       regexp: 'TODO-YARN-LOCAL-LOG-DIR'
+#       line: '<value>{{ yarn_local_log_dir }}</value>'
+#       state: present
+
+#   - name: YARN LOG DIR variable injection
+#     become: yes
+#     become_method: sudo
+#     lineinfile:
+#       dest: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/container-executor.cfg
+#       regexp: 'TODO-YARN-LOG-DIR'
+#       line: '<value>{{ yarn_log_dir }}</value>'
+#       state: present
 
     - name: core-site.xml namenode variable injection
       become: yes
@@ -692,7 +710,56 @@
         regexp: 'TODO-RMNODE-HOSTNAME:8030'
         line: '<value>{{resourcemanagernode_hostname}}:8030</value>'
         state: present
+    
+    - name: yarn-site.xml block injection
+      become: yes
+      become_method: sudo
+      blockinfile:
+        path: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/yarn-site.xml
+        insertbefore: "</configuration>"
+        content: |
+          <property>
+          <name>yarn.application.classpath</name>
+          <value>$HADOOP_CONF_DIR,/usr/hdp/${hdp.version}/hadoop-client/*,
+             /usr/hdp/${hdp.version}/hadoop-client/lib/*,
+             /usr/hdp/${hdp.version}/hadoop-hdfs-client/*,
+             /usr/hdp/${hdp.version}/hadoop-hdfs-client/lib/*,
+             /usr/hdp/${hdp.version}/hadoop-yarn-client/*,
+             /usr/hdp/${hdp.version}/hadoop-yarn-client/lib/*
+          </value>
+          </property>
 
+    - name: mapred-site.xml block injection
+      become: yes
+      become_method: sudo
+      blockinfile:
+        path: /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/mapred-site.xml
+        insertbefore: "</configuration>"
+        content: |
+          <property>
+             <name>mapreduce.admin.map.childe.java.opts</name>
+             <value>-server -Djava.net.preferIPv4Stack=true -Dhdp.version=2.6.3.0-235</value>
+             <final>true</final>
+          </property>
+          <property>
+             <name>mapreduce.admin.user.env</name>
+             <value>LD_LIBRARY_PATH=/usr/hdp/2.6.3.0-235/hadoop/lib/native:/usr/hdp/2.6.3.0-235/hadoop/lib/native/Linux-amd64-64</value>
+          </property>
+          <property>
+             <name>mapreduce.application.framework.path</name>
+             <value>/hdp/apps/${hdp.version}/mapreduce/mapreduce.tar.gz#mr-framework</value>
+          </property>
+          <property>
+             <name>mapreduce.application.classpath</name>
+             <value>$PWD/mr-framework/hadoop/share/hadoop/mapreduce/*:$PWD/mr-
+                framework/hadoop/share/hadoop/mapreduce/lib/*:$PWD/mr-framework/hadoop/
+                share/hadoop/common/*:$PWD/mr-framework/hadoop/share/hadoop/common/lib/
+                *:$PWD/mr-framework/hadoop/share/hadoop/yarn/*:$PWD/mr-framework/hadoop/
+                share/hadoop/yarn/lib/*:$PWD/mr-framework/hadoop/share/hadoop/hdfs/*:
+                $PWD/mr-framework/hadoop/share/hadoop/hdfs/lib/*:/usr/hdp/${hdp.version}/
+                hadoop/lib/hadoop-lzo-0.6.0.${hdp.version}.jar:/etc/hadoop/conf/secure
+             </value>
+          </property> 
 
     - name: copy configuration templates to conf directory
       become: yes
@@ -716,11 +783,53 @@
      become_method: sudo
      shell: . ~/.bashrc && export JAVA_HOME=/usr/java/jdk1.8.0_151
      
-
+   - name: Run as user hdfs - history server
+     become: yes
+     become_method: sudo
+     become_user: hdfs
+     command: hdfs dfs -mkdir -p /mr-history/tmp 
+     
+   - name: Run as user hdfs - history server 
+     become: yes
+     become_method: sudo
+     become_user: hdfs
+     command: hdfs dfs -chmod -R 1777 /mr-history/tmp 
+     
+   - name: Run as user hdfs - history server 
+     become: yes
+     become_method: sudo
+     become_user: hdfs
+     command: hdfs dfs -mkdir -p /mr-history/done
+     
+   - name: Run as user hdfs - history server
+     become: yes
+     become_method: sudo
+     become_user: hdfs
+     command: hdfs dfs -chmod -R 1777 /mr-history/done
+     
+   - name: Run as user hdfs - history server
+     become: yes
+     become_method: sudo
+     become_user: hdfs
+     command: hdfs dfs -chown mapred:hdfs /mr-history 
+     
    - name: Run as user hdfs
      become: yes
      become_method: sudo
-     command: ls /tmp
+     become_user: hdfs
+     command: hdfs dfs -mkdir -p /app-logs
+     
+   - name: Run as user hdfs
+     become: yes
+     become_method: sudo
+     become_user: hdfs
+     command: hdfs dfs -chmod -R 1777 /app-logs
+     
+   - name: Run as user hdfs
+     become: yes
+     become_method: sudo
+     become_user: hdfs
+     command: hdfs dfs -chown yarn:hdfs /app-logs
      
      
 #- hosts: snn01
