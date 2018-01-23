@@ -7,4 +7,5 @@
 - name: Run as user hdfs
   become: yes
   become_method: sudo
-  command:
+  become_user: hdfs
+  command:  sudo -u hdfs /usr/hdp/current/hadoop-hdfs-secondarynamenode/../hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start secondarynamenode

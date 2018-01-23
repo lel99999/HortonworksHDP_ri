@@ -4,7 +4,60 @@
   become_method: sudo
   shell:  . ~/.bashrc && export JAVA_HOME=/usr/java/jdk1.8.0_151
 
+- name: Run as user hdfs - history server
+  become: yes
+  become_method: sudo
+  become_user: hdfs
+  command: hdfs dfs -mkdir -p /mr-history/tmp 
+     
+- name: Run as user hdfs - history server 
+  become: yes
+  become_method: sudo
+  become_user: hdfs
+  command: hdfs dfs -chmod -R 1777 /mr-history/tmp 
+     
+- name: Run as user hdfs - history server 
+  become: yes
+  become_method: sudo
+  become_user: hdfs
+  command: hdfs dfs -mkdir -p /mr-history/done
+     
+- name: Run as user hdfs - history server
+  become: yes
+  become_method: sudo
+  become_user: hdfs
+  command: hdfs dfs -chmod -R 1777 /mr-history/done
+     
+- name: Run as user hdfs - history server
+  become: yes
+  become_method: sudo
+  become_user: hdfs
+  command: hdfs dfs -chown mapred:hdfs /mr-history 
+  
 - name: Run as user hdfs
   become: yes
   become_method: sudo
-  command:
+  become_user: hdfs
+  command: hdfs dfs -mkdir -p /app-logs
+
+   - name: Run as user hdfs
+     become: yes
+     become_method: sudo
+     become_user: hdfs
+     command: hdfs dfs -chmod -R 1777 /app-logs
+     
+   - name: Run as user hdfs
+     become: yes
+     become_method: sudo
+     become_user: hdfs
+     command: hdfs dfs -chown yarn:hdfs /app-logs
+     
+     
+#- hosts: snn01
+#  name: secondary namenode tasks only
+#  tasks:
+
+#- hosts: datanodes
+#  name: namenode tasks only
+#  tasks:
+

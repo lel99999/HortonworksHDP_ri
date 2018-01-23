@@ -7,4 +7,5 @@
 - name: Run as user hdfs
   become: yes
   become_method: sudo
-  command:
+  become_user: hdfs
+  command: /usr/hdp/current/hadoop-hdfs-datanode/../hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode
