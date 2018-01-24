@@ -4,8 +4,24 @@
   become_method: sudo
   shell:  . ~/.bashrc && export JAVA_HOME=/usr/java/jdk1.8.0_151
 
-- name: Run as user hdfs
+- name: unhealthy node error fix 1/2
+  become: yes
+  become_method: sudo
+  command: chown -R root:hadoop /usr/hdp/current/hadoop-yarn*/bin/container-executor
+
+- name: unhealthy node error fix 2/2
+  become: yes
+  become_method: sudo
+  command: chmod -R 6050 /usr/hdp/current/hadoop-yarn*/bin/container-executor
+
+- name: Start Datanode as Hdfs
   become: yes
   become_method: sudo
   become_user: hdfs
   command: /usr/hdp/current/hadoop-hdfs-datanode/../hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode
+
+- name: Start Nodemanager as Yarn
+  become: yes
+  become_method: sudo
+  become_user: yarn
+  command: /usr/hdp/current/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start nodemanager

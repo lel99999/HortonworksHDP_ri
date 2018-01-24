@@ -773,6 +773,16 @@
       #  remote_src: yes
         #directory_mode: yes
 
+    - name: unhealthy node error fix 1/2
+      become: yes
+      become_method: sudo
+      command: chown -R root:hadoop /usr/hdp/current/hadoop-yarn*/bin/container-executor
+
+    - name: unhealthy node error fix 2/2
+      become: yes
+      become_method: sudo
+      command: chmod -R 6050 /usr/hdp/current/hadoop-yarn*/bin/container-executor
+
 # Validating Core Hadoop
 - hosts: nn01
   name: namenode tasks only
