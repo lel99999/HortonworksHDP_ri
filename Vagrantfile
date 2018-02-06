@@ -14,6 +14,15 @@ Vagrant.configure("2") do |config|
 #   #hdprepo.vm.box = "wharton-wcit/centos6py36"
 #   hdprepo.vm.network "private_network", ip: "192.168.60.159"
 # end
+  config.vm.define "ambari" do |ambari|
+  #config.vm.define "mstr01" do |mstr01|
+    #nn01.customize ["modifyvm", :id, "--memory", 2048]
+    ambari.vm.box = "bento/centos-6.7"
+    ambari.vm.hostname = "ambari"
+    #mstr01.vm.hostname = "mstr01"
+    #mtrr01.vm.box = "wharton-wcit/centos6py36"
+    ambari.vm.network "private_network", ip: "192.168.60.159"
+  end
   config.vm.define "nn01" do |nn01|
   #config.vm.define "mstr01" do |mstr01|
     #nn01.customize ["modifyvm", :id, "--memory", 2048]

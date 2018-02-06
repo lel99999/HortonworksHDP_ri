@@ -719,6 +719,16 @@
         insertbefore: "</configuration>"
         content: |
           <property>
+          <name>yarn.nodemanager.vmem-check-enabled</name>
+          <value>False</value>
+          </property>
+<!--
+          <property>
+          <name>yarn.nodemanager.vmem-pmem-ratio</name>
+          <value>4</value>
+          </property>
+-->
+          <property>
           <name>yarn.application.classpath</name>
           <value>$HADOOP_CONF_DIR,/usr/hdp/${hdp.version}/hadoop-client/*,
              /usr/hdp/${hdp.version}/hadoop-client/lib/*,
