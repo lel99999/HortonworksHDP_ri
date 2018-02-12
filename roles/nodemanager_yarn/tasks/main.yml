@@ -1,0 +1,12 @@
+---
+- name: set env variable JAVA_HOME
+  become: yes
+  become_method: sudo
+  shell:  . ~/.bashrc && export JAVA_HOME=/usr/java/jdk1.8.0_151
+
+- name: start nodemanager
+  become: yes
+  become_method: sudo
+  become_user: yarn
+  command: /usr/hdp/2.6.3.0-235/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start nodemanager
+

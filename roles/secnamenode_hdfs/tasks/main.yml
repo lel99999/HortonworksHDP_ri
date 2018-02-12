@@ -9,3 +9,9 @@
   become_method: sudo
   become_user: hdfs
   command:  sudo -u hdfs /usr/hdp/current/hadoop-hdfs-secondarynamenode/../hadoop/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start secondarynamenode
+
+- name: Run as user yarn #if running Resource Manager on Secondary Namenode
+  become: yes
+  become_method: sudo
+  become_user: yarn
+  command:  sudo -u yarn /usr/hdp/2.6.3.0-235/hadoop-yarn/sbin/yarn-daemon.sh --config /etc/hadoop/conf start resourcemanager
