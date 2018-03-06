@@ -1,0 +1,4 @@
+---
+- hosts: winAD01
+  name: add winRM module
+
