@@ -7,3 +7,4 @@
         name: ansible
         password: "@ns1bl3"
         state: present 
+    - win_ping:
