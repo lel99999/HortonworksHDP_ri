@@ -1,3 +1,6 @@
+[windows]
+winAD01
+
 [test]
 hdptest ansible_ssh_host=192.168.60.162
 
@@ -7,6 +10,8 @@ hdprepo  ansible_ssh_host=192.168.60.161
 #[master]
 #mstr01  ansible_ssh_host=192.168.60.160
 #mstr01  ansible_ssh_host=192.168.60.160
+[ambari]
+ambari
 
 [namenodes]
 nn01 ansible_ssh_host=192.168.60.160
