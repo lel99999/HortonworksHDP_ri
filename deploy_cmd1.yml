@@ -1,9 +1,13 @@
 ---
-- hosts: dn03
-  name: test execute
+- name: winAD01 test
+  vars:
+    - ansible_connection: winrm
+    - ansible_user: administrator
+    - ansible_password: vagrant
+    - ansible_port: 5985
+  hosts: windows
   tasks:
-    - name: copy configuration templates to conf directory
-      become: yes
-      become_method: sudo
-      shell: 'command cp -f /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/* /etc/hadoop/conf/'
-      #command: 'command cp -f /opt/hdp_manual_install_rpm_helper_files-2.6.0.3.8/configuration_files/core_hadoop/* /etc/hadoop/conf/'
+  - name: test module
+    win_ping:
+#    win_module:
+#      name: test
