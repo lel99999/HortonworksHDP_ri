@@ -1,8 +1,8 @@
 Vagrant.configure("2") do |config|
   
   config.vm.provider "virtualbox" do |v|
-    v.memory = "2048"
-    v.cpus = 4
+    v.memory = "1024"
+    v.cpus = 2
     v.customize ["modifyvm", :id, "--cpuexecutioncap", "70"]
   end
   config.vm.define "winAD01" do |winAD01|
@@ -30,6 +30,26 @@ Vagrant.configure("2") do |config|
     #mstr01.vm.hostname = "mstr01"
     #mtrr01.vm.box = "wharton-wcit/centos6py36"
     ambari.vm.network "private_network", ip: "192.168.60.159"
+    ambari.vm.provision "shell", :inline => "sudo wget http://public-repo-1.hortonworks.com/ambari/centos6/2.x/updates/2.6.0.0/ambari.repo -O /etc/yum.repos.d/amari.repo"
+#   ambari.vm.provision :shell,
+    ambari.vm.provision "shell", :inline => "sudo echo '192.168.60.159 ambari ambari.local' >> /etc/hosts"
+    ambari.vm.provision "shell", :inline => "sudo echo '192.168.60.160 nn01 nn01.local' >> /etc/hosts"
+    ambari.vm.provision "shell", :inline => "sudo echo '192.168.60.161 snn01 snn01.local' >> /etc/hosts"
+    ambari.vm.provision "shell", :inline => "sudo echo '192.168.60.165 dn01 dn01.local' >> /etc/hosts"
+    ambari.vm.provision "shell", :inline => "sudo echo '192.168.60.166 dn02 dn02.local' >> /etc/hosts"
+    ambari.vm.provision "shell", :inline => "sudo echo '192.168.60.167 dn03 dn03.local' >> /etc/hosts"
+
+    ambari.vm.provision "ansible" do |ansible|
+      ansible.playbook = "deploy_ambari.yml"
+    end
+  end
+end
+
+Vagrant.configure("2") do |config|
+  config.vm.provider "virtualbox" do |v|
+    v.memory = "2048"
+    v.cpus = 2
+    v.customize ["modifyvm", :id, "--cpuexecutioncap", "70"]
   end
   config.vm.define "nn01" do |nn01|
   #config.vm.define "mstr01" do |mstr01|
@@ -39,6 +59,14 @@ Vagrant.configure("2") do |config|
     #mstr01.vm.hostname = "mstr01"
     #mtrr01.vm.box = "wharton-wcit/centos6py36"
     nn01.vm.network "private_network", ip: "192.168.60.160"
+#    nn01.vm.provision :shell,
+#   nn01.vm.provision "shell" do |s|
+    nn01.vm.provision "shell", :inline => "sudo echo '192.168.60.159 ambari ambari.local' >> /etc/hosts"
+    nn01.vm.provision "shell", :inline => "sudo echo '192.168.60.160 nn01 nn01.local' >> /etc/hosts"
+    nn01.vm.provision "shell", :inline => "sudo echo '192.168.60.161 snn01 snn01.local' >> /etc/hosts"
+    nn01.vm.provision "shell", :inline => "sudo echo '192.168.60.165 dn01 dn01.local' >> /etc/hosts"
+    nn01.vm.provision "shell", :inline => "sudo echo '192.168.60.166 dn02 dn02.local' >> /etc/hosts"
+    nn01.vm.provision "shell", :inline => "sudo echo '192.168.60.167 dn03 dn03.local' >> /etc/hosts"
   end
   config.vm.define "snn01" do |snn01|
   #config.vm.define "mstr01" do |mstr01|
@@ -48,6 +76,13 @@ Vagrant.configure("2") do |config|
     #mstr01.vm.hostname = "mstr01"
     #mtrr01.vm.box = "wharton-wcit/centos6py36"
     snn01.vm.network "private_network", ip: "192.168.60.161"
+#   snn01.vm.provision "shell" do |s|
+    snn01.vm.provision "shell", :inline => "sudo echo '192.168.60.159 ambari ambari.local' >> /etc/hosts"
+    snn01.vm.provision "shell", :inline => "sudo echo '192.168.60.160 nn01 nn01.local' >> /etc/hosts"
+    snn01.vm.provision "shell", :inline => "sudo echo '192.168.60.161 snn01 snn01.local' >> /etc/hosts"
+    snn01.vm.provision "shell", :inline => "sudo echo '192.168.60.165 dn01 dn01.local' >> /etc/hosts"
+    snn01.vm.provision "shell", :inline => "sudo echo '192.168.60.166 dn02 dn02.local' >> /etc/hosts"
+    snn01.vm.provision "shell", :inline => "sudo echo '192.168.60.167 dn03 dn03.local' >> /etc/hosts"
   end
   config.vm.define "dn01" do |dn01|
     #dn01.customize ["modifyvm", :id, "--memory", 2048]
@@ -55,6 +90,14 @@ Vagrant.configure("2") do |config|
     dn01.vm.hostname = "dn01"
     #dn01.vm.box = "wharton-wcit/centos6py36"
     dn01.vm.network "private_network", ip: "192.168.60.165"
+#   dn01.vm.provision :shell,
+#   dn01.vm.provision "shell" do |s|
+    dn01.vm.provision "shell", :inline => "sudo echo '192.168.60.159 ambari ambari.local' >> /etc/hosts"
+    dn01.vm.provision "shell", :inline => "sudo echo '192.168.60.160 nn01 nn01.local' >> /etc/hosts"
+    dn01.vm.provision "shell", :inline => "sudo echo '192.168.60.161 snn01 snn01.local' >> /etc/hosts"
+    dn01.vm.provision "shell", :inline => "sudo echo '192.168.60.165 dn01 dn01.local' >> /etc/hosts"
+    dn01.vm.provision "shell", :inline => "sudo echo '192.168.60.166 dn02 dn02.local' >> /etc/hosts"
+    dn01.vm.provision "shell", :inline => "sudo echo '192.168.60.167 dn03 dn03.local' >> /etc/hosts"
   end
   config.vm.define "dn02" do |dn02|
     #dn02.customize ["modifyvm", :id, "--memory", 2048]
@@ -62,12 +105,24 @@ Vagrant.configure("2") do |config|
     dn02.vm.hostname = "dn02"
     #dn02.vm.box = "wharton-wcit/centos6py36"
     dn02.vm.network "private_network", ip: "192.168.60.166"
+    dn02.vm.provision "shell", :inline => "sudo echo '192.168.60.159 ambari ambari.local' >> /etc/hosts"
+    dn02.vm.provision "shell", :inline => "sudo echo '192.168.60.160 nn01 nn01.local' >> /etc/hosts"
+    dn02.vm.provision "shell", :inline => "sudo echo '192.168.60.161 snn01 snn01.local' >> /etc/hosts"
+    dn02.vm.provision "shell", :inline => "sudo echo '192.168.60.165 dn01 dn01.local' >> /etc/hosts"
+    dn02.vm.provision "shell", :inline => "sudo echo '192.168.60.166 dn02 dn02.local' >> /etc/hosts"
+    dn02.vm.provision "shell", :inline => "sudo echo '192.168.60.167 dn03 dn03.local' >> /etc/hosts"
   end
   config.vm.define "dn03" do |dn03|
     dn03.vm.box = "bento/centos-6.7"
     dn03.vm.hostname = "dn03"
     #dn03.vm.box = "wharton-wcit/centos6py36"
     dn03.vm.network "private_network", ip: "192.168.60.167"
+    dn03.vm.provision "shell", :inline => "sudo echo '192.168.60.159 ambari ambari.local' >> /etc/hosts"
+    dn03.vm.provision "shell", :inline => "sudo echo '192.168.60.160 nn01 nn01.local' >> /etc/hosts"
+    dn03.vm.provision "shell", :inline => "sudo echo '192.168.60.161 snn01 snn01.local' >> /etc/hosts"
+    dn03.vm.provision "shell", :inline => "sudo echo '192.168.60.165 dn01 dn01.local' >> /etc/hosts"
+    dn03.vm.provision "shell", :inline => "sudo echo '192.168.60.166 dn02 dn02.local' >> /etc/hosts"
+    dn03.vm.provision "shell", :inline => "sudo echo '192.168.60.167 dn03 dn03.local' >> /etc/hosts"
   end
   #config.vm.provision "ansible" do |ansible|
   #  ansible.playbook = "hdp_singlesetup.yml"

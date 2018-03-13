@@ -1,0 +1,10 @@
+---
+- hosts: ambari
+  name: install and configure ambari
+  become: yes
+  become_method: sudo
+  tasks:
+    - include_role:
+        name: oracle_java8  
+    - name: install ambari
+      command:  yum -y install ambari-server
