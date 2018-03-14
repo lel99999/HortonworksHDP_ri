@@ -30,6 +30,7 @@ Vagrant.configure("2") do |config|
     #mstr01.vm.hostname = "mstr01"
     #mtrr01.vm.box = "wharton-wcit/centos6py36"
     ambari.vm.network "private_network", ip: "192.168.60.159"
+    ambari.vm.provision "file",source:"~/Downloads/jdk-8u151-linux-x64.tar.gz",destination: "/opt"
     ambari.vm.provision "shell", :inline => "sudo wget http://public-repo-1.hortonworks.com/ambari/centos6/2.x/updates/2.6.0.0/ambari.repo -O /etc/yum.repos.d/amari.repo"
 #   ambari.vm.provision :shell,
     ambari.vm.provision "shell", :inline => "sudo echo '192.168.60.159 ambari ambari.local' >> /etc/hosts"
