@@ -1,0 +1,20 @@
+---
+- hosts: all
+  name: Run on all machines
+  tasks:
+    - name: install ntp
+      become: yes
+      become_method: sudo
+      command:  yum install -y ntp
+
+    - name: ensure ntp always started
+      become: yes
+      become_method: sudo
+      command: checkconfig ntpd on
+    - name: disable transparent huge pages
+      become: yes
+      become_method: sudo
+      command: "{{ item }}" 
+      with_items:
+        - echo never > /sys/kernel/mm/redhat_transparent_hugepage/enabled
+        - echo never > /sys/kernel/mm/redhat_transparent_hugepage/defrag
