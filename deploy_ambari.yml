@@ -19,5 +19,12 @@
 #     command: echo -e "y\nn\n1\ny\nn\nn\n" | ambari-server setup
       register: ambari_setup
     - debug: var=ambari_setup.stdout_lines
+    - name: start ambari
+      become: yes
+      become_method: sudo
+      shell: ambari-server start
+      ignore_errors: true
+      register: ambari_start
+    - debug: var=ambari_start.stdout_lines
 #   - debug: msg="{{ ambari_setup.stdout }}"
 #   - debug: msg="{{ ambari_setup.stderr }}"

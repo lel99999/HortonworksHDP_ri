@@ -2,6 +2,12 @@
 - hosts: all
   name: Run on all machines
   tasks:
+    - name: install libselinux-python
+      become: yes
+      become_method: sudo
+      yum:
+        name: libselinux-python
+        state: present
     - name: install ntp
       become: yes
       become_method: sudo
@@ -10,11 +16,25 @@
     - name: ensure ntp always started
       become: yes
       become_method: sudo
-      command: checkconfig ntpd on
+      command: chkconfig ntpd on
     - name: disable transparent huge pages
       become: yes
       become_method: sudo
-      command: "{{ item }}" 
+      shell: "{{ item }}" 
       with_items:
         - echo never > /sys/kernel/mm/redhat_transparent_hugepage/enabled
         - echo never > /sys/kernel/mm/redhat_transparent_hugepage/defrag
+#     register: disable_thp
+#     ignore_errors: true
+#   - debug: var=disable_thp.stdout_lines
+    - name: addresss localhost issue
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /etc/hosts
+#       path: /etc/hosts    #Only good for Ansible > 2.3, use dest= for Ansible < 2.3
+        regexp: '^127\.0\.0\.1'
+        line: '#127.0.0.1'
+        owner: root
+        group: root
+        mode: 0644
