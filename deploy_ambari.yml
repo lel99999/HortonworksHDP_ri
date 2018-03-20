@@ -8,6 +8,12 @@
   tasks:
 #   - include_role:
 #       name: oracle_java8  
+    - name: install libselinux-python
+      become: yes
+      become_method: sudo
+      yum:
+        name: libselinux-python
+        state: present
     - name: install ambari
       become: yes
       become_method: sudo
@@ -26,5 +32,54 @@
       ignore_errors: true
       register: ambari_start
     - debug: var=ambari_start.stdout_lines
+    - name: generate ssh keys
+      become: yes
+      become_method: sudo
+      command: ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
+      register: ssh_keygen
+    - debug: var=ssh_keygen.stdout_lines
+    - name: copy sshpass and unzip
+      become: yes
+      become_method: sudo
+      copy:
+        src: files/{{item}}
+        dest: /opt
+      with_items:
+        - rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm 
+    - name: install repoforge
+      become: yes
+      become_method: sudo
+      shell: yum -y localinstall /opt/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm 
+    - name: install sshpass
+      become: yes
+      become_method: sudo
+      shell: yum -y install sshpass
+    - name: ensure ntp always started
+      become: yes
+      become_method: sudo
+      command: chkconfig ntpd on
+    - name: set to local ntp server
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /etc/ntp.conf
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      with_items:
+        - { regexp: 'server 0.centos.pool.ntp.org iburst',line:'#server 0.centos.pool.ntp.org iburst'}
+        - { regexp: 'server 1.centos.pool.ntp.org iburst',line:'#server 1.centos.pool.ntp.org iburst'}
+        - { regexp: 'server 2.centos.pool.ntp.org iburst',line:'#server 2.centos.pool.ntp.org iburst'}
+        - { regexp: 'server 3.centos.pool.ntp.org iburst',line:'#server 3.centos.pool.ntp.org iburst\nserver ambari.hdpdev.com iburst'}
+#   - name: execute ssh-copy-id to specified hosts
+#     become: yes
+#     become_method: sudo
+#     shell: sshpass -f /tmp/.pwd1 root@{{ item }}
+#     with_items:
+#       - groups[namenodes]
+#       - groups[secondarynamenode]
+#       - groups[datanodes]
+#     register: sshr_copy_id
+#   - debug: var=ssh_copy_id.stdout_lines
+
 #   - debug: msg="{{ ambari_setup.stdout }}"
 #   - debug: msg="{{ ambari_setup.stderr }}"
