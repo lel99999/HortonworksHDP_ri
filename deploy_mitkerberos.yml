@@ -91,7 +91,11 @@
       become: yes
       become_method: sudo
 #     shell: kdb5_util create -r HDPDEV.COM -s
+<<<<<<< HEAD
 #     shell: echo -e "P@ssw0rd\nP@ssw0rd" | kdb5_util create -r HDPDEV.COM -s
       shell: echo -e "P@ssw0rd\nP@ssw0rd" | kdb5_util create -s
+=======
+      shell: echo -e "P@ssw0rd\nP@ssw0rd" | kdb5_util create -r HDPDEV.COM -s
+>>>>>>> 013e18cce457d5f9125b87d9f8ddfa8d8351751b
       register: kdb5_create
     - debug: var=kdb5_create.stdout_lines

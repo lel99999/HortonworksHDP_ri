@@ -66,10 +66,18 @@
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
       with_items:
-        - { regexp: 'server 0.centos.pool.ntp.org iburst',line:'#server 0.centos.pool.ntp.org iburst'}
-        - { regexp: 'server 1.centos.pool.ntp.org iburst',line:'#server 1.centos.pool.ntp.org iburst'}
-        - { regexp: 'server 2.centos.pool.ntp.org iburst',line:'#server 2.centos.pool.ntp.org iburst'}
-        - { regexp: 'server 3.centos.pool.ntp.org iburst',line:'#server 3.centos.pool.ntp.org iburst\nserver ambari.hdpdev.com iburst'}
+        - { regexp: 'server 0.centos.pool.ntp.org iburst', line: '#server 0.centos.pool.ntp.org iburst' }
+        - { regexp: 'server 1.centos.pool.ntp.org iburst', line: '#server 1.centos.pool.ntp.org iburst' }
+        - { regexp: 'server 2.centos.pool.ntp.org iburst', line: '#server 2.centos.pool.ntp.org iburst' }
+        - { regexp: 'server 3.centos.pool.ntp.org iburst', line: '#server 3.centos.pool.ntp.org iburst' }
+    - name:
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /etc/ntp.conf
+        regexp: '^#server 0.centos.pool.ntp.org iburst'
+        insertbefore: '#server 0.centos.pool.ntp.org iburst'
+        line: server ambari.hdpdev.com iburst
 #   - name: execute ssh-copy-id to specified hosts
 #     become: yes
 #     become_method: sudo
