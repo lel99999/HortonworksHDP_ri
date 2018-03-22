@@ -40,6 +40,15 @@ Vagrant.configure("2") do |config|
       ansible.playbook = "deploy_ambari.yml"
     end
   end
+end
+
+Vagrant.configure("2") do |config|
+  
+  config.vm.provider "virtualbox" do |v|
+    v.memory = "512"
+    v.cpus = 1
+    v.customize ["modifyvm", :id, "--cpuexecutioncap", "70"]
+  end
   config.vm.define "mit01" do |mit01|
     mit01.vm.box = "bento/centos-6.7"
     mit01.vm.hostname = "mit01.hdpdev.com"
@@ -51,17 +60,18 @@ Vagrant.configure("2") do |config|
     mit01.vm.provision "shell", :inline => "sudo echo '192.168.60.165 dn01.hdpdev.com dn01' >> /etc/hosts"
     mit01.vm.provision "shell", :inline => "sudo echo '192.168.60.166 dn02.hdpdev.com dn02' >> /etc/hosts"
     mit01.vm.provision "shell", :inline => "sudo echo '192.168.60.167 dn03.hdpdev.com dn03' >> /etc/hosts"
-#   mit01.vm.provision "ansible" do |ansible|
-#     ansible.playbook = "deploy_mitkerberos.yml"
-#   end
+
+    mit01.vm.provision "ansible" do |ansible|
+      ansible.playbook = "deploy_mitkerberos.yml"
+    end
   end
 end
 
 Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |v|
-    v.memory = "4096"
-#   v.memory = "2048"
-#   v.memory = "1536"
+#   v.memory = "4096"  # medium desktop
+#   v.memory = "2048"  # small desktop
+    v.memory = "1536"  # laptop <= 16GB RAM
     v.cpus = 2
     v.customize ["modifyvm", :id, "--cpuexecutioncap", "70"]
   end

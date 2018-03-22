@@ -72,7 +72,7 @@
       replace:
         dest: /etc/krb5.conf
         regexp: '.default_realm = EXAMPLE.COM'
-        replace: '.default_realm = hdpdev.com'
+        replace: '.default_realm = HDPDEV.COM'
     - name: update default_realm 2
       become: yes
       become_method: sudo 

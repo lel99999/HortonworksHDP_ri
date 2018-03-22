@@ -14,30 +14,38 @@
       yum:
         name: libselinux-python
         state: present
+
     - name: install ambari
       become: yes
       become_method: sudo
       command:  yum -y install ambari-server
+
     - name: run ambari-server setup
       become: yes
       become_method: sudo
       shell: echo -e "y\nn\n1\ny\nn\nn\n" | ambari-server setup
 #     command: echo -e "y\nn\n1\ny\nn\nn\n" | ambari-server setup
       register: ambari_setup
+
     - debug: var=ambari_setup.stdout_lines
+
     - name: start ambari
       become: yes
       become_method: sudo
       shell: ambari-server start
       ignore_errors: true
       register: ambari_start
+
     - debug: var=ambari_start.stdout_lines
+
     - name: generate ssh keys
       become: yes
       become_method: sudo
       command: ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
       register: ssh_keygen
+
     - debug: var=ssh_keygen.stdout_lines
+
     - name: copy sshpass and unzip
       become: yes
       become_method: sudo
@@ -46,24 +54,36 @@
         dest: /opt
       with_items:
         - rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm 
+
     - name: install repoforge
       become: yes
       become_method: sudo
       shell: yum -y localinstall /opt/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm 
+
     - name: install sshpass
       become: yes
       become_method: sudo
       shell: yum -y install sshpass
+
     - name: install ntp
       become: yes
       become_method: sudo
       yum:
         name: ntp
         state: present
+
+    - name: start ntp service
+      become: yes
+      become_method: sudo
+      service:
+        name: ntpd
+        state: restarted
+
     - name: ensure ntp always started
       become: yes
       become_method: sudo
       command: chkconfig ntpd on
+
     - name: set to local ntp server
       become: yes
       become_method: sudo
@@ -76,7 +96,8 @@
         - { regexp: 'server 1.centos.pool.ntp.org iburst', line: '#server 1.centos.pool.ntp.org iburst' }
         - { regexp: 'server 2.centos.pool.ntp.org iburst', line: '#server 2.centos.pool.ntp.org iburst' }
         - { regexp: 'server 3.centos.pool.ntp.org iburst', line: '#server 3.centos.pool.ntp.org iburst' }
-    - name:
+
+    - name: set ambari as ntp server
       become: yes
       become_method: sudo
       lineinfile:
@@ -84,19 +105,13 @@
         regexp: '^#server 0.centos.pool.ntp.org iburst'
         insertbefore: '#server 0.centos.pool.ntp.org iburst'
         line: server ambari.hdpdev.com iburst
-    - name: start ntp service
-      become: yes
-      become_method: sudo
-      service:
-        name: ntpd
-        state: restarted
 
     - name: stop iptables
       become: yes
       become_method: sudo
       service: 
         name: iptables
-        state: stop
+        state: stopped
 
     - name: disable iptables
       become: yes
