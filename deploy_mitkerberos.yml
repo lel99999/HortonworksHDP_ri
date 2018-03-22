@@ -133,8 +133,8 @@
     - name: create KDC database
       become: yes
       become_method: sudo
-      shell: echo -e "P@ssw0rd\nP@ssw0rd" | kdb5_util -r HDPDEV.COM create -s
-#     shell: echo -e "P@ssw0rd\nP@ssw0rd" | kdb5_util create -s
+#     shell: echo -e "P@ssw0rd\nP@ssw0rd" | kdb5_util -r HDPDEV.COM create -s
+      shell: echo -e "P@ssw0rd\nP@ssw0rd" | kdb5_util create -s
       register: kdb5_create
     - debug: var=kdb5_create.stdout_lines
     - name: start krb5kdc service

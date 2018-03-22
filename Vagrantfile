@@ -35,6 +35,7 @@ Vagrant.configure("2") do |config|
     ambari.vm.provision "shell", :inline => "sudo echo '192.168.60.165 dn01.hdpdev.com dn01' >> /etc/hosts"
     ambari.vm.provision "shell", :inline => "sudo echo '192.168.60.166 dn02.hdpdev.com dn02' >> /etc/hosts"
     ambari.vm.provision "shell", :inline => "sudo echo '192.168.60.167 dn03.hdpdev.com dn03' >> /etc/hosts"
+    ambari.vm.provision "shell", :inline => "sudo echo '192.168.60.152 mit01.hdpdev.com mit01' >> /etc/hosts"
 
     ambari.vm.provision "ansible" do |ansible|
       ansible.playbook = "deploy_ambari.yml"
@@ -88,6 +89,7 @@ Vagrant.configure("2") do |config|
     nn01.vm.provision "shell", :inline => "sudo echo '192.168.60.165 dn01.hdpdev.com dn01' >> /etc/hosts"
     nn01.vm.provision "shell", :inline => "sudo echo '192.168.60.166 dn02.hdpdev.com dn02' >> /etc/hosts"
     nn01.vm.provision "shell", :inline => "sudo echo '192.168.60.167 dn03.hdpdev.com dn03' >> /etc/hosts"
+    nn01.vm.provision "shell", :inline => "sudo echo '192.168.60.152 mit01.hdpdev.com mit01' >> /etc/hosts"
     nn01.vm.provision "ansible" do |ansible|
       ansible.playbook = "deploy_allnodes.yml"
     end
@@ -104,6 +106,7 @@ Vagrant.configure("2") do |config|
     snn01.vm.provision "shell", :inline => "sudo echo '192.168.60.165 dn01.hdpdev.com dn01' >> /etc/hosts"
     snn01.vm.provision "shell", :inline => "sudo echo '192.168.60.166 dn02.hdpdev.com dn02' >> /etc/hosts"
     snn01.vm.provision "shell", :inline => "sudo echo '192.168.60.167 dn03.hdpdev.com dn03' >> /etc/hosts"
+    snn01.vm.provision "shell", :inline => "sudo echo '192.168.60.152 mit01.hdpdev.com mit01' >> /etc/hosts"
     snn01.vm.provision "ansible" do |ansible|
       ansible.playbook = "deploy_allnodes.yml"
     end
@@ -119,6 +122,7 @@ Vagrant.configure("2") do |config|
     dn01.vm.provision "shell", :inline => "sudo echo '192.168.60.165 dn01.hdpdev.com dn01' >> /etc/hosts"
     dn01.vm.provision "shell", :inline => "sudo echo '192.168.60.166 dn02.hdpdev.com dn02' >> /etc/hosts"
     dn01.vm.provision "shell", :inline => "sudo echo '192.168.60.167 dn03.hdpdev.com dn03' >> /etc/hosts"
+    dn01.vm.provision "shell", :inline => "sudo echo '192.168.60.152 mit01.hdpdev.com mit01' >> /etc/hosts"
     dn01.vm.provision "ansible" do |ansible|
       ansible.playbook = "deploy_allnodes.yml"
     end
@@ -134,6 +138,7 @@ Vagrant.configure("2") do |config|
     dn02.vm.provision "shell", :inline => "sudo echo '192.168.60.165 dn01.hdpdev.com dn01' >> /etc/hosts"
     dn02.vm.provision "shell", :inline => "sudo echo '192.168.60.166 dn02.hdpdev.com dn02' >> /etc/hosts"
     dn02.vm.provision "shell", :inline => "sudo echo '192.168.60.167 dn03.hdpdev.com dn03' >> /etc/hosts"
+    dn02.vm.provision "shell", :inline => "sudo echo '192.168.60.152 mit01.hdpdev.com mit01' >> /etc/hosts"
     dn02.vm.provision "ansible" do |ansible|
       ansible.playbook = "deploy_allnodes.yml"
     end
@@ -148,6 +153,7 @@ Vagrant.configure("2") do |config|
     dn03.vm.provision "shell", :inline => "sudo echo '192.168.60.165 dn01.hdpdev.com dn01' >> /etc/hosts"
     dn03.vm.provision "shell", :inline => "sudo echo '192.168.60.166 dn02.hdpdev.com dn02' >> /etc/hosts"
     dn03.vm.provision "shell", :inline => "sudo echo '192.168.60.167 dn03.hdpdev.com dn03' >> /etc/hosts"
+    dn03.vm.provision "shell", :inline => "sudo echo '192.168.60.152 mit01.hdpdev.com mit01' >> /etc/hosts"
     dn03.vm.provision "ansible" do |ansible|
       ansible.playbook = "deploy_allnodes.yml"
     end
