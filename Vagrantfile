@@ -20,7 +20,7 @@ Vagrant.configure("2") do |config|
 #   hdprepo.vm.box = "bento/centos-6.7"
 #   hdprepo.vm.hostname = "hdprepo"
 #   #hdprepo.vm.box = "wharton-wcit/centos6py36"
-#   hdprepo.vm.network "private_network", ip: "192.168.60.159"
+#   hdprepo.vm.network "private_network", ip: "192.168.60.158"
 # end
   config.vm.define "ambari" do |ambari|
     ambari.vm.box = "bento/centos-6.7"
@@ -46,16 +46,22 @@ Vagrant.configure("2") do |config|
     mit01.vm.network "private_network", ip: "192.168.60.152"
     mit01.vm.provision "shell", :inline => "sudo echo '192.168.60.159 ambari.hdpdev.com ambari' >> /etc/hosts"
     mit01.vm.provision "shell", :inline => "sudo echo '192.168.60.152 mit01.hdpdev.com mit01' >> /etc/hosts"
-    mit01.vm.provision "ansible" do |ansible|
-      ansible.playbook = "deploy_mitkerberos.yml"
-    end
+    mit01.vm.provision "shell", :inline => "sudo echo '192.168.60.160 nn01.hdpdev.com nn01' >> /etc/hosts"
+    mit01.vm.provision "shell", :inline => "sudo echo '192.168.60.161 snn01.hdpdev.com snn01' >> /etc/hosts"
+    mit01.vm.provision "shell", :inline => "sudo echo '192.168.60.165 dn01.hdpdev.com dn01' >> /etc/hosts"
+    mit01.vm.provision "shell", :inline => "sudo echo '192.168.60.166 dn02.hdpdev.com dn02' >> /etc/hosts"
+    mit01.vm.provision "shell", :inline => "sudo echo '192.168.60.167 dn03.hdpdev.com dn03' >> /etc/hosts"
+#   mit01.vm.provision "ansible" do |ansible|
+#     ansible.playbook = "deploy_mitkerberos.yml"
+#   end
   end
 end
 
 Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |v|
+    v.memory = "4096"
 #   v.memory = "2048"
-    v.memory = "1536"
+#   v.memory = "1536"
     v.cpus = 2
     v.customize ["modifyvm", :id, "--cpuexecutioncap", "70"]
   end

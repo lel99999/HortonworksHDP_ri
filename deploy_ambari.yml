@@ -54,6 +54,12 @@
       become: yes
       become_method: sudo
       shell: yum -y install sshpass
+    - name: install ntp
+      become: yes
+      become_method: sudo
+      yum:
+        name: ntp
+        state: present
     - name: ensure ntp always started
       become: yes
       become_method: sudo
@@ -78,6 +84,42 @@
         regexp: '^#server 0.centos.pool.ntp.org iburst'
         insertbefore: '#server 0.centos.pool.ntp.org iburst'
         line: server ambari.hdpdev.com iburst
+    - name: start ntp service
+      become: yes
+      become_method: sudo
+      service:
+        name: ntpd
+        state: restarted
+
+    - name: stop iptables
+      become: yes
+      become_method: sudo
+      service: 
+        name: iptables
+        state: stop
+
+    - name: disable iptables
+      become: yes
+      become_method: sudo
+      shell: chkconfig iptables off
+
+    - name: disable selinux
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /etc/sysconfig/selinux
+        regexp: '^SELINUX=permissive'
+        line: 'SELINUX=disabled'
+
+    - name: addresss localhost issue
+      become: yes
+      become_method: sudo
+      replace:
+        dest: /etc/hosts
+#       path: /etc/hosts    #Only good for Ansible > 2.3, use dest= for Ansible < 2.3
+        regexp: '^127\.0\.0\.1'
+        replace: '#127.0.0.1'
+
 #   - name: execute ssh-copy-id to specified hosts
 #     become: yes
 #     become_method: sudo

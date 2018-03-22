@@ -8,6 +8,45 @@
       yum:
         name: libselinux-python
         state: present
+   
+    - name: install ntp
+      become: yes
+      become_method: sudo
+      yum:
+        name: ntp
+        state: present
+    - name: ensure ntp always started
+      become: yes
+      become_method: sudo
+      command: chkconfig ntpd on
+
+    - name: set local ntp server
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /etc/ntp.conf
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      with_items:
+        - { regexp: 'server 0.centos.pool.ntp.org iburst', line: '#server 0.centos.pool.ntp.org iburst' }
+        - { regexp: 'server 1.centos.pool.ntp.org iburst', line: '#server 1.centos.pool.ntp.org iburst' }
+        - { regexp: 'server 2.centos.pool.ntp.org iburst', line: '#server 2.centos.pool.ntp.org iburst' }
+        - { regexp: 'server 3.centos.pool.ntp.org iburst', line: '#server 3.centos.pool.ntp.org iburst' }
+    - name: set local ntp server
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /etc/ntp.conf
+        regexp: '^#server 0.centos.pool.ntp.org iburst'
+        insertbefore: '#server 0.centos.pool.ntp.org iburst'
+        line: server ambari.hdpdev.com iburst
+    - name: start ntp service
+      become: yes
+      become_method: sudo
+      service:
+        name: ntpd
+        state: restarted
+
     - name: install MIT Kerberos
       become: yes
       become_method: sudo
@@ -18,25 +57,29 @@
         - krb5-libs
         - krb5-workstation
 #       - krb5-auth-dialog
-#       - yum install krb5-server krb5-libs krb5-auth-dialog
     - name: addresss localhost issue
       become: yes
       become_method: sudo
-      lineinfile:
+      replace:
         dest: /etc/hosts
 #       path: /etc/hosts    #Only good for Ansible > 2.3, use dest= for Ansible < 2.3
         regexp: '^127\.0\.0\.1'
-        line: '#127.0.0.1'
-        owner: root
-        group: root
-        mode: 0644
-    - name: update default_realm
+        replace: '#127.0.0.1'
+
+    - name: update default_realm 1
       become: yes
       become_method: sudo 
-      lineinfile:
+      replace:
+        dest: /etc/krb5.conf
+        regexp: '.default_realm = EXAMPLE.COM'
+        replace: '.default_realm = hdpdev.com'
+    - name: update default_realm 2
+      become: yes
+      become_method: sudo 
+      replace:
         dest: /etc/krb5.conf
         regexp: 'default_realm = EXAMPLE.COM'
-        line: 'default_realm = hdpdev.com'
+        replace: 'default_realm = hdpdev.com'
     - name: update domain kdc
       become: yes
       become_method: sudo 
@@ -90,12 +133,40 @@
     - name: create KDC database
       become: yes
       become_method: sudo
-#     shell: kdb5_util create -r HDPDEV.COM -s
-<<<<<<< HEAD
-#     shell: echo -e "P@ssw0rd\nP@ssw0rd" | kdb5_util create -r HDPDEV.COM -s
-      shell: echo -e "P@ssw0rd\nP@ssw0rd" | kdb5_util create -s
-=======
-      shell: echo -e "P@ssw0rd\nP@ssw0rd" | kdb5_util create -r HDPDEV.COM -s
->>>>>>> 013e18cce457d5f9125b87d9f8ddfa8d8351751b
+      shell: echo -e "P@ssw0rd\nP@ssw0rd" | kdb5_util -r HDPDEV.COM create -s
+#     shell: echo -e "P@ssw0rd\nP@ssw0rd" | kdb5_util create -s
       register: kdb5_create
     - debug: var=kdb5_create.stdout_lines
+    - name: start krb5kdc service
+      become: yes
+      become_method: sudo
+      service:
+        name: krb5kdc
+        state: started
+    - name: start kadmin service
+      become: yes
+      become_method: sudo
+      service:
+        name: kadmin
+        state: started
+
+    - name: stop iptables
+      become: yes
+      become_method: sudo
+      service:
+        name: iptables
+        state: stop
+
+    - name: disable iptables
+      become: yes
+      become_method: sudo
+      shell: chkconfig iptables off
+
+    - name: disable selinux
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /etc/sysconfig/selinux
+        regexp: '^SELINUX=permissive'
+        line: 'SELINUX=disabled'
+

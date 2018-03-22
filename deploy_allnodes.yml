@@ -8,15 +8,24 @@
       yum:
         name: libselinux-python
         state: present
+
     - name: install ntp
       become: yes
       become_method: sudo
       command:  yum install -y ntp
 
+    - name: start ntpd service
+      become: yes
+      become_method: sudo
+      service:
+        name: ntpd
+        state: started
+
     - name: ensure ntp always started
       become: yes
       become_method: sudo
       command: chkconfig ntpd on
+
     - name: set to local ntp server
       become: yes
       become_method: sudo
@@ -29,7 +38,8 @@
         - { regexp: 'server 1.centos.pool.ntp.org iburst', line: '#server 1.centos.pool.ntp.org iburst' }
         - { regexp: 'server 2.centos.pool.ntp.org iburst', line: '#server 2.centos.pool.ntp.org iburst' }
         - { regexp: 'server 3.centos.pool.ntp.org iburst', line: '#server 3.centos.pool.ntp.org iburst' }
-    - name:
+
+    - name: make ambari local ntp server
       become: yes
       become_method: sudo
       lineinfile:
@@ -57,11 +67,10 @@
     - name: addresss localhost issue
       become: yes
       become_method: sudo
-      lineinfile:
+      replace:
         dest: /etc/hosts
 #       path: /etc/hosts    #Only good for Ansible > 2.3, use dest= for Ansible < 2.3
         regexp: '^127\.0\.0\.1'
-        line: '#127.0.0.1'
-        owner: root
-        group: root
-        mode: 0644
+        replace: '#127.0.0.1'
+
+
