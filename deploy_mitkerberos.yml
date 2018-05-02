@@ -46,7 +46,12 @@
       service:
         name: ntpd
         state: restarted
-
+    - name: install Net-tools
+      become: yes
+      become_method: sudo
+      yum:
+        name: net-tools
+  	state: present 
     - name: install MIT Kerberos
       become: yes
       become_method: sudo
