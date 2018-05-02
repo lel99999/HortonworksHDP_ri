@@ -76,15 +76,15 @@
       become_method: sudo 
       replace:
         dest: /etc/krb5.conf
-        regexp: '.default_realm = EXAMPLE.COM'
-        replace: '.default_realm = HDPDEV.COM'
-    - name: update default_realm 2
-      become: yes
-      become_method: sudo 
-      replace:
-        dest: /etc/krb5.conf
         regexp: 'default_realm = EXAMPLE.COM'
-        replace: 'default_realm = hdpdev.com'
+        replace: 'default_realm = HDPDEV.COM'
+#   - name: update default_realm 2
+#     become: yes
+#     become_method: sudo 
+#     replace:
+#       dest: /etc/krb5.conf
+#       regexp: '.default_realm = EXAMPLE.COM'
+#       replace: '.default_realm = HDPDEV.COM'
     - name: update domain kdc
       become: yes
       become_method: sudo 
@@ -104,15 +104,15 @@
       become_method: sudo 
       replace:
         dest: /etc/krb5.conf
-        regexp: '.example.com = EXAMPLE.COM'
-        replace: '.hdpdev.com = HDPDEV.COM'
+        regexp: 'example.com = EXAMPLE.COM'
+        replace: 'hdpdev.com = HDPDEV.COM'
     - name: update domain initialization2
       become: yes
       become_method: sudo 
       replace:
         dest: /etc/krb5.conf
-        regexp: 'example.com = EXAMPLE.COM'
-        replace: 'hdpdev.com = HDPDEV.COM'
+        regexp: '.example.com = EXAMPLE.COM'
+        replace: '.hdpdev.com = HDPDEV.COM'
     - name: update domain
       become: yes
       become_method: sudo 
@@ -135,6 +135,24 @@
         dest: /var/kerberos/krb5kdc/kadm5.acl
         regexp: '@EXAMPLE.COM'
         replace: '@HDPDEV.COM'
+    - name: check init entropy
+      become: yes
+      become_method: sudo
+      shell: cat /proc/sys/kernel/random/entropy_avail
+      register: entropy_avail
+    - debug: var entropy_avail.stdout_lines
+    - name: check system entropy (random number generation for cryptographic randomness)
+      become: yes
+      become_method: sudo
+      yum:
+        name: haveged
+        state: present
+    - name: check post-haveged entropy
+      become: yes
+      become_method: sudo
+      shell: cat /proc/sys/kernel/random/entropy_avail
+      register: postentropy_avail
+    - debug: var postentropy_avail.stdout_lines
     - name: create KDC database
       become: yes
       become_method: sudo
