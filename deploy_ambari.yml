@@ -135,6 +135,13 @@
         regexp: '^127\.0\.0\.1'
         replace: '#127.0.0.1'
 
+    - name: install kerberos client 
+      become: yes
+      become_method: sudo
+      yum:
+        name: krb5-workstation
+        state: present
+
 #   - name: execute ssh-copy-id to specified hosts
 #     become: yes
 #     become_method: sudo
